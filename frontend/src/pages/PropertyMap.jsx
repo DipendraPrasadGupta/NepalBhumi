@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Heart, ChevronLeft, ChevronRight, Search, Map, Bed, Bath, Square, Sliders, X, Calendar, Users, AlertCircle, ExternalLink } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import gsap from 'gsap';
@@ -334,7 +334,7 @@ const PropertyMap = () => {
     // Fetch properties from backend ONLY
     const fetchBackendProperties = async () => {
       try {
-        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://nepalbhumi.onrender.com/api';
         const response = await fetch(`${apiUrl}/properties?status=active&limit=100`, {
           method: 'GET',
           headers: {

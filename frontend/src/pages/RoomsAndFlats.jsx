@@ -55,7 +55,7 @@ function RoomsAndFlats() {
       params.append('status', 'active');
       params.append('limit', 50);
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://nepalbhumi.onrender.com/api';
       const response = await fetch(`${apiUrl}/properties?${params}`, {
         method: 'GET',
         headers: {

@@ -23,6 +23,11 @@ const startServer = async () => {
 ║   📊 Environment: ${process.env.NODE_ENV}    ║
 ╚═══════════════════════════════════════════╝
       `);
+
+      app.get("/", (req, res) => {
+        res.send("API is running 🚀");
+      });
+
     });
 
   } catch (error) {
