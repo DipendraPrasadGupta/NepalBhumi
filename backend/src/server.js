@@ -1,17 +1,9 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import './config/env.js';
 import app from './app.js';
 import connectDB from './config/database.js';
 import { initializeCloudinary } from './config/cloudinary.js';
 
-// Load environment variables from .env file FIRST
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const envPath = path.resolve(__dirname, '../.env');
-console.log('📂 Loading .env from:', envPath);
-dotenv.config({ path: envPath });
-
-// Initialize Cloudinary AFTER dotenv is loaded
+// Initialize Cloudinary
 console.log('⚙️  Initializing Cloudinary...');
 initializeCloudinary();
 
