@@ -14,16 +14,17 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
-    // Start server
-    app.listen(PORT, '127.0.0.1', () => {
+    // Start server (FIXED HERE)
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`
 ╔═══════════════════════════════════════════╗
 ║   NepalBhumi Server Running Successfully   ║
-║   🚀 Server: http://localhost:${PORT}         ║
+║   🚀 Server: http://0.0.0.0:${PORT}         ║
 ║   📊 Environment: ${process.env.NODE_ENV}    ║
 ╚═══════════════════════════════════════════╝
       `);
     });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
