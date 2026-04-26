@@ -4,6 +4,13 @@ import { useAuthStore } from '../store.js';
 import { Search, MapPin, User, Star, ChevronLeft, ChevronRight, Loader, Globe, X, Briefcase, ChevronDown } from 'lucide-react';
 import { userAPI } from '../api/endpoints.js';
 
+import imgKathmandu from '../assets/images/kathmandu.webp';
+import imgPokhara from '../assets/images/pokhara.jpeg';
+import imgLalitpur from '../assets/images/Lalitpur.jpeg';
+import imgBhaktapur from '../assets/images/Bhaktapur.jpg';
+import imgChitwan from '../assets/images/chitwan.jpg';
+import imgLumbini from '../assets/images/lumbini.webp';
+
 function Agents() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
@@ -14,16 +21,16 @@ function Agents() {
 
   // Quick popular cities for the carousel
   // Quick popular cities with high-quality images
-  const popularCities = [
-    { name: 'Kathmandu', image: 'https://images.unsplash.com/photo-1541414779316-957a44f77c34?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Pokhara', image: 'https://images.unsplash.com/photo-1505438872214-5392666718cf?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Lalitpur', image: 'https://images.unsplash.com/photo-1540320611021-ef788f4c46f3?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Bhaktapur', image: 'https://images.unsplash.com/photo-1620980489953-cc7291a27e74?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Chitwan', image: 'https://images.unsplash.com/photo-1610444391629-16631ad11050?q=80&w=400&auto=format&fit=crop' },
+    const popularCities = [
+    { name: 'Lumbini', image: imgLumbini },
+    { name: 'Kathmandu', image: imgKathmandu },
+    { name: 'Pokhara', image: imgPokhara },
+    { name: 'Lalitpur', image: imgLalitpur },
+    { name: 'Bhaktapur', image: imgBhaktapur },
+    { name: 'Chitwan', image: imgChitwan },
     { name: 'Butwal', image: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?q=80&w=400&auto=format&fit=crop' },
     { name: 'Biratnagar', image: 'https://images.unsplash.com/photo-1444723121867-7a241cacace9?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Dhangadhi', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=400&auto=format&fit=crop' },
-    { name: 'Lumbini', image: 'https://images.unsplash.com/photo-1610444391605-7f9a1f298282?q=80&w=400&auto=format&fit=crop' }
+    { name: 'Dhangadhi', image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=400&auto=format&fit=crop' }
   ];
 
   useEffect(() => {
@@ -146,8 +153,8 @@ function Agents() {
                   key={city.name}
                   onClick={() => setSelectedCity(city.name)}
                   className={`snap-start relative flex-none w-48 sm:w-56 h-72 rounded-3xl overflow-hidden group/city transition-all duration-500 ${selectedCity === city.name
-                      ? 'ring-4 ring-blue-500 ring-offset-4 ring-offset-slate-900 scale-[1.02]'
-                      : 'hover:scale-[1.02]'
+                    ? 'ring-4 ring-blue-500 ring-offset-4 ring-offset-slate-900 scale-[1.02]'
+                    : 'hover:scale-[1.02]'
                     }`}
                 >
                   <img
@@ -156,8 +163,8 @@ function Agents() {
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/city:scale-110"
                   />
                   <div className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-300 ${selectedCity === city.name
-                      ? 'from-blue-900/90 via-blue-900/40 to-transparent'
-                      : 'from-slate-900/90 via-slate-900/20 to-transparent group-hover/city:from-blue-900/60'
+                    ? 'from-blue-900/90 via-blue-900/40 to-transparent'
+                    : 'from-slate-900/90 via-slate-900/20 to-transparent group-hover/city:from-blue-900/60'
                     }`} />
 
                   <div className="absolute bottom-6 left-6 right-6">

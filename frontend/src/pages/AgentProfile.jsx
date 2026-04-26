@@ -894,6 +894,21 @@ function AgentProfile() {
               {activeSection === 'about' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
                   <div className="md:col-span-2">
+                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                      <User size={16} /> Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={profileData.name}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || isViewOnly}
+                      placeholder="Your Full Name"
+                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
                     <label className="text-sm text-slate-400 block mb-2">Bio / Description</label>
                     <textarea
                       name="description"
