@@ -25,6 +25,7 @@ import HelpCenter from './pages/HelpCenter';
 import ContactUs from './pages/ContactUs';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
+import About from './pages/About';
 import './index.css';
 
 function AppContent() {
@@ -62,6 +63,7 @@ function AppContent() {
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-conditions" element={<TermsConditions />} />
+          <Route path="/about" element={<About />} />
           <Route
             path="/admin"
             element={

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
+import { Facebook, Globe, Linkedin, Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
@@ -31,13 +31,13 @@ const Footer = () => {
               Nepal's most trusted real estate platform. Connecting buyers, sellers, and renters with confidence.
             </p>
             <div className="flex space-x-3 pt-4">
-              <a href="#" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
+              <a href="https://www.facebook.com/dipendraprasadgupta177" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
-                <Instagram size={20} />
+              <a href="https://dipendraprasadgupta.vercel.app/" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
+                <Globe size={20} />
               </a>
-              <a href="#" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
+              <a href="https://www.linkedin.com/in/technicaldipendra/" className="p-3 rounded-lg bg-gray-800/50 hover:bg-primary transition-all hover:scale-110 hover:shadow-lg hover:shadow-primary/30">
                 <Linkedin size={20} />
               </a>
             </div>
@@ -57,17 +57,18 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/about" className="flex items-center gap-2 hover:text-primary hover:translate-x-2 transition-all">
+                  <ChevronRight size={18} className="flex-shrink-0" />
+                  <span className="font-medium">About Us</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="/map" className="flex items-center gap-2 hover:text-primary hover:translate-x-2 transition-all">
                   <ChevronRight size={18} className="flex-shrink-0" />
                   <span className="font-medium">Browse on Map</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/search" className="flex items-center gap-2 hover:text-primary hover:translate-x-2 transition-all">
-                  <ChevronRight size={18} className="flex-shrink-0" />
-                  <span className="font-medium">Search Properties</span>
-                </Link>
-              </li>
+
               <li>
                 <Link to="/explore" className="flex items-center gap-2 hover:text-primary hover:translate-x-2 transition-all">
                   <ChevronRight size={18} className="flex-shrink-0" />
@@ -156,9 +157,9 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center text-gray-500 text-sm">
           <p className="font-medium">© {currentYear} <span className="text-primary font-bold">NepalBhumi</span> - All rights reserved. || Developed By Dipendra Prasad Gupta</p>
           <div className="flex gap-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-primary transition-colors font-medium">Privacy</a>
-            <a href="#" className="hover:text-primary transition-colors font-medium">Terms</a>
-            <a href="#" className="hover:text-primary transition-colors font-medium">Sitemap</a>
+            <a href="/privacy-policy" className="hover:text-primary transition-colors font-medium">Privacy</a>
+            <a href="/terms-conditions" className="hover:text-primary transition-colors font-medium">Terms</a>
+            <a href="#" className="hover:text-primary transition-colors font-medium">About</a>
           </div>
         </div>
       </div>
