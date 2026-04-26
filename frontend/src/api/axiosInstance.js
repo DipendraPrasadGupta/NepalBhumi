@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://nepalbhumi.onrender.com/api';
+const envUrl = import.meta.env.VITE_API_URL || 'https://nepalbhumi.onrender.com';
+const API_URL = envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
 
 const api = axios.create({
   baseURL: API_URL,
