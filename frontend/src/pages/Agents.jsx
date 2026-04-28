@@ -21,7 +21,7 @@ function Agents() {
 
   // Quick popular cities for the carousel
   // Quick popular cities with high-quality images
-    const popularCities = [
+  const popularCities = [
     { name: 'Lumbini', image: imgLumbini },
     { name: 'Kathmandu', image: imgKathmandu },
     { name: 'Pokhara', image: imgPokhara },

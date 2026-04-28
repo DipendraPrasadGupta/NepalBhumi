@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuthStore } from '../store.js';
+import { useAuthStore } from '../../store.js';
 import { useNavigate, useParams } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance.js';
-import { propertyAPI, userAPI, reportAPI } from '../api/endpoints.js';
+import axiosInstance from '../../api/axiosInstance.js';
+import { propertyAPI, userAPI, reportAPI } from '../../api/endpoints.js';
 import {
   User, Mail, Phone, MapPin, Edit, Save, X, Camera, Upload, Star,
   Home, TrendingUp, Eye, LogOut, Settings, AlertCircle, CheckCircle,
@@ -676,7 +676,7 @@ function AgentProfile() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeSection === tab.id
                       ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                    }`}
+                      }`}
                   >
                     <tab.icon size={16} />
                     {tab.label}
@@ -844,457 +844,457 @@ function AgentProfile() {
 
           {/* ── EDIT MODE ───────────────────────────────────────────── */}
           {isEditing && (
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Profile Information */}
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-blue-400 flex items-center gap-2"><Edit size={18} /> Editing Profile</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSaveProfile}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition disabled:opacity-50"
-                  >
-                    <Save size={18} />
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    onClick={() => { setIsEditing(false); loadAgentProfile(); }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 rounded-lg transition"
-                  >
-                    <X size={18} />
-                    Cancel
-                  </button>
-                </div>
-              </div>
-
-              {/* Tab Navigation */}
-              <div className="flex flex-wrap gap-2 border-b border-slate-600 pb-4 mb-6">
-                {[
-                  { id: 'about', label: 'About Me', icon: User },
-                  { id: 'contact', label: 'Contact Info', icon: Mail },
-                  { id: 'agency', label: 'Agency Info', icon: Briefcase },
-                  { id: 'listings', label: 'My Listings', icon: Home }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveSection(tab.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeSection === tab.id
-                      ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                      }`}
-                  >
-                    <tab.icon size={16} />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Form Fields - About Me */}
-              {activeSection === 'about' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                  <div className="md:col-span-2">
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <User size={16} /> Full Name
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Your Full Name"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-sm text-slate-400 block mb-2">Bio / Description</label>
-                    <textarea
-                      name="description"
-                      value={profileData.description}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Write a brief bio about yourself..."
-                      rows="3"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50 resize-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <User size={16} /> Username
-                    </label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={profileData.username}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. joshiland"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Briefcase size={16} /> My Work
-                    </label>
-                    <input
-                      type="text"
-                      name="work"
-                      value={profileData.work}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. Land Agent"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Navigation size={16} /> Dream Travel Destination
-                    </label>
-                    <input
-                      type="text"
-                      name="dreamTravel"
-                      value={profileData.dreamTravel}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. Paris"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Globe size={16} /> Languages Spoken
-                    </label>
-                    <input
-                      type="text"
-                      name="languages"
-                      value={profileData.languages}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. English, Nepali, Hindi"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Calendar size={16} /> Birth Date
-                    </label>
-                    <input
-                      type="date"
-                      name="birthDate"
-                      value={profileData.birthDate}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Info size={16} /> Fun Fact
-                    </label>
-                    <input
-                      type="text"
-                      name="funFacts"
-                      value={profileData.funFacts}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. StandUp comedian"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Clock size={16} /> I spend too much time...
-                    </label>
-                    <input
-                      type="text"
-                      name="timeSink"
-                      value={profileData.timeSink}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. using phone"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Heart size={16} /> Obsessed with...
-                    </label>
-                    <input
-                      type="text"
-                      name="obsession"
-                      value={profileData.obsession}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. Making money"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Form Fields - Contact Info */}
-              {activeSection === 'contact' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Mail size={16} /> Email
-                    </label>
-                    <input
-                      type="email"
-                      value={profileData.email}
-                      disabled
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg text-slate-400 cursor-not-allowed"
-                    />
-                    <p className="text-xs text-slate-500 mt-1">Cannot be changed</p>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Phone size={16} /> Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Enter your phone number"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Globe2 size={16} /> Website / Home Page
-                    </label>
-                    <input
-                      type="url"
-                      name="homePage"
-                      value={profileData.homePage}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. https://mywebsite.com"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2 mt-4">
-                    <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Address</h4>
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <MapPin size={16} /> City / Region
-                    </label>
-                    <input
-                      type="text"
-                      name="location"
-                      value={profileData.location}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="e.g. Dhangadhi"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <MapPin size={16} /> Residence
-                    </label>
-                    <input
-                      type="text"
-                      name="residence"
-                      value={profileData.residence}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Where you live"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <MapPin size={16} /> Street Address
-                    </label>
-                    <input
-                      type="text"
-                      name="streetAddress"
-                      value={profileData.streetAddress}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Street name, P.O. box, etc."
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <MapPin size={16} /> Apartment, Suite, etc.
-                    </label>
-                    <input
-                      type="text"
-                      name="apartment"
-                      value={profileData.apartment}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Apartment, suite, unit, building, floor, etc."
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Form Fields - Agency Info */}
-              {activeSection === 'agency' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
-                  <div className="md:col-span-2">
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Briefcase size={16} /> License Number
-                    </label>
-                    <input
-                      type="text"
-                      name="licenseNumber"
-                      value={profileData.licenseNumber}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Your Agent License Number"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      Years of Experience
-                    </label>
-                    <input
-                      type="number"
-                      name="experienceYears"
-                      value={profileData.experienceYears}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      placeholder="e.g. 5"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      Total Sales
-                    </label>
-                    <input
-                      type="number"
-                      name="salesCount"
-                      value={profileData.salesCount}
-                      onChange={handleInputChange}
-                      disabled={!isEditing}
-                      placeholder="e.g. 20"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Briefcase size={16} /> Agency Name
-                    </label>
-                    <input
-                      type="text"
-                      name="agencyName"
-                      value={profileData.agencyName}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Name of your agency"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <Phone size={16} /> Agency Phone
-                    </label>
-                    <input
-                      type="tel"
-                      name="agencyPhone"
-                      value={profileData.agencyPhone}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Agency contact number"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
-                      <MapPin size={16} /> Agency Address
-                    </label>
-                    <input
-                      type="text"
-                      name="agencyAddress"
-                      value={profileData.agencyAddress}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || isViewOnly}
-                      placeholder="Full agency address"
-                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Listings Tab (edit mode) */}
-              {activeSection === 'listings' && (
-                <div className="animate-in fade-in duration-300">
-                  <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-                    <h3 className="text-xl font-semibold text-blue-400">Your Listings Overview</h3>
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Profile Information */}
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-blue-400 flex items-center gap-2"><Edit size={18} /> Editing Profile</h3>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => navigate('/agent/properties')}
-                      className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                      onClick={handleSaveProfile}
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition disabled:opacity-50"
                     >
-                      Manage All <TrendingUp size={14} />
+                      <Save size={18} />
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => { setIsEditing(false); loadAgentProfile(); }}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 rounded-lg transition"
+                    >
+                      <X size={18} />
+                      Cancel
                     </button>
                   </div>
-                  {listingsLoading ? (
-                    <div className="text-center py-8">
-                      <Loader className="animate-spin mx-auto mb-2" size={24} />
-                      <p className="text-sm text-slate-400">Loading listings...</p>
-                    </div>
-                  ) : listings.length === 0 ? (
-                    <div className="text-center py-8 bg-slate-800/30 rounded-lg border border-slate-700 border-dashed">
-                      <Home size={32} className="mx-auto text-slate-500 mb-2" />
-                      <p className="text-sm text-slate-400">No properties posted yet</p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {listings.slice(0, 4).map((listing) => (
-                        <div key={listing._id} className="flex gap-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                          <img src={listing.images?.[0]?.url || 'https://via.placeholder.com/80'} alt={listing.title} className="w-16 h-16 object-cover rounded" />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm text-white truncate">{listing.title}</h4>
-                            <p className="text-xs text-slate-400 truncate">{listing.location?.city}</p>
-                            <p className="text-xs text-blue-400 mt-1 font-semibold">₹{listing.price?.toLocaleString()}</p>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${listing.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}`}>{listing.status}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {listings.length > 4 && (
-                    <button onClick={() => navigate('/agent/properties')} className="w-full mt-4 py-2 text-sm text-slate-300 bg-slate-700/50 hover:bg-slate-700 rounded transition">
-                      View all {listings.length} listings
-                    </button>
-                  )}
                 </div>
-              )}
+
+                {/* Tab Navigation */}
+                <div className="flex flex-wrap gap-2 border-b border-slate-600 pb-4 mb-6">
+                  {[
+                    { id: 'about', label: 'About Me', icon: User },
+                    { id: 'contact', label: 'Contact Info', icon: Mail },
+                    { id: 'agency', label: 'Agency Info', icon: Briefcase },
+                    { id: 'listings', label: 'My Listings', icon: Home }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveSection(tab.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-t-lg transition-colors ${activeSection === tab.id
+                        ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-500'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                        }`}
+                    >
+                      <tab.icon size={16} />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Form Fields - About Me */}
+                {activeSection === 'about' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <User size={16} /> Full Name
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={profileData.name}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Your Full Name"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-slate-400 block mb-2">Bio / Description</label>
+                      <textarea
+                        name="description"
+                        value={profileData.description}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Write a brief bio about yourself..."
+                        rows="3"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50 resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <User size={16} /> Username
+                      </label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={profileData.username}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. joshiland"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Briefcase size={16} /> My Work
+                      </label>
+                      <input
+                        type="text"
+                        name="work"
+                        value={profileData.work}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. Land Agent"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Navigation size={16} /> Dream Travel Destination
+                      </label>
+                      <input
+                        type="text"
+                        name="dreamTravel"
+                        value={profileData.dreamTravel}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. Paris"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Globe size={16} /> Languages Spoken
+                      </label>
+                      <input
+                        type="text"
+                        name="languages"
+                        value={profileData.languages}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. English, Nepali, Hindi"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Calendar size={16} /> Birth Date
+                      </label>
+                      <input
+                        type="date"
+                        name="birthDate"
+                        value={profileData.birthDate}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Info size={16} /> Fun Fact
+                      </label>
+                      <input
+                        type="text"
+                        name="funFacts"
+                        value={profileData.funFacts}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. StandUp comedian"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Clock size={16} /> I spend too much time...
+                      </label>
+                      <input
+                        type="text"
+                        name="timeSink"
+                        value={profileData.timeSink}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. using phone"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Heart size={16} /> Obsessed with...
+                      </label>
+                      <input
+                        type="text"
+                        name="obsession"
+                        value={profileData.obsession}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. Making money"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Fields - Contact Info */}
+                {activeSection === 'contact' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Mail size={16} /> Email
+                      </label>
+                      <input
+                        type="email"
+                        value={profileData.email}
+                        disabled
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg text-slate-400 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Cannot be changed</p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Phone size={16} /> Phone
+                      </label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={profileData.phone}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Enter your phone number"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Globe2 size={16} /> Website / Home Page
+                      </label>
+                      <input
+                        type="url"
+                        name="homePage"
+                        value={profileData.homePage}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. https://mywebsite.com"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2 mt-4">
+                      <h4 className="text-sm font-semibold text-slate-300 mb-3 border-b border-slate-700 pb-2">Address</h4>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <MapPin size={16} /> City / Region
+                      </label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={profileData.location}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="e.g. Dhangadhi"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <MapPin size={16} /> Residence
+                      </label>
+                      <input
+                        type="text"
+                        name="residence"
+                        value={profileData.residence}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Where you live"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <MapPin size={16} /> Street Address
+                      </label>
+                      <input
+                        type="text"
+                        name="streetAddress"
+                        value={profileData.streetAddress}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Street name, P.O. box, etc."
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <MapPin size={16} /> Apartment, Suite, etc.
+                      </label>
+                      <input
+                        type="text"
+                        name="apartment"
+                        value={profileData.apartment}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Apartment, suite, unit, building, floor, etc."
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Form Fields - Agency Info */}
+                {activeSection === 'agency' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Briefcase size={16} /> License Number
+                      </label>
+                      <input
+                        type="text"
+                        name="licenseNumber"
+                        value={profileData.licenseNumber}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Your Agent License Number"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        Years of Experience
+                      </label>
+                      <input
+                        type="number"
+                        name="experienceYears"
+                        value={profileData.experienceYears}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="e.g. 5"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        Total Sales
+                      </label>
+                      <input
+                        type="number"
+                        name="salesCount"
+                        value={profileData.salesCount}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="e.g. 20"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Briefcase size={16} /> Agency Name
+                      </label>
+                      <input
+                        type="text"
+                        name="agencyName"
+                        value={profileData.agencyName}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Name of your agency"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <Phone size={16} /> Agency Phone
+                      </label>
+                      <input
+                        type="tel"
+                        name="agencyPhone"
+                        value={profileData.agencyPhone}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Agency contact number"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-sm text-slate-400 mb-2 flex items-center gap-2">
+                        <MapPin size={16} /> Agency Address
+                      </label>
+                      <input
+                        type="text"
+                        name="agencyAddress"
+                        value={profileData.agencyAddress}
+                        onChange={handleInputChange}
+                        disabled={!isEditing || isViewOnly}
+                        placeholder="Full agency address"
+                        className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Listings Tab (edit mode) */}
+                {activeSection === 'listings' && (
+                  <div className="animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+                      <h3 className="text-xl font-semibold text-blue-400">Your Listings Overview</h3>
+                      <button
+                        onClick={() => navigate('/agent/properties')}
+                        className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                      >
+                        Manage All <TrendingUp size={14} />
+                      </button>
+                    </div>
+                    {listingsLoading ? (
+                      <div className="text-center py-8">
+                        <Loader className="animate-spin mx-auto mb-2" size={24} />
+                        <p className="text-sm text-slate-400">Loading listings...</p>
+                      </div>
+                    ) : listings.length === 0 ? (
+                      <div className="text-center py-8 bg-slate-800/30 rounded-lg border border-slate-700 border-dashed">
+                        <Home size={32} className="mx-auto text-slate-500 mb-2" />
+                        <p className="text-sm text-slate-400">No properties posted yet</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {listings.slice(0, 4).map((listing) => (
+                          <div key={listing._id} className="flex gap-3 bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                            <img src={listing.images?.[0]?.url || 'https://via.placeholder.com/80'} alt={listing.title} className="w-16 h-16 object-cover rounded" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm text-white truncate">{listing.title}</h4>
+                              <p className="text-xs text-slate-400 truncate">{listing.location?.city}</p>
+                              <p className="text-xs text-blue-400 mt-1 font-semibold">₹{listing.price?.toLocaleString()}</p>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${listing.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}`}>{listing.status}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {listings.length > 4 && (
+                      <button onClick={() => navigate('/agent/properties')} className="w-full mt-4 py-2 text-sm text-slate-300 bg-slate-700/50 hover:bg-slate-700 rounded transition">
+                        View all {listings.length} listings
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
           )}
 
         </div>

@@ -11,12 +11,12 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminPropertyDashboard from './pages/AdminPropertyDashboard';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminProperties from './pages/Admin/Properties/AdminProperties';
 import Agents from './pages/Agents';
-import AgentProfile from './pages/AgentProfile';
-import AgentPropertyDashboard from './pages/AgentPropertyDashboard';
-import AgentDashboard from './pages/AgentDashboard';
+import AgentProfile from './pages/Agent/AgentProfile';
+import AgentPropertyDashboard from './pages/Agent/AgentPropertyDashboard';
+import AgentDashboard from './pages/Agent/AgentDashboard';
 import NotFound from './pages/NotFound';
 import ElectricityCalculator from './pages/tools/ElectricityCalculator';
 import LandAreaConversion from './pages/tools/LandAreaConversion';
@@ -34,10 +34,11 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAgentRoute = location.pathname.startsWith('/agent');
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname) || isAdminRoute || isAgentRoute;
+  const shouldHideNavbar = isAdminRoute || isAgentRoute;
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      {!shouldHideNavbar && <Navbar />}
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -76,7 +77,7 @@ function AppContent() {
             path="/admin/properties"
             element={
               <ProtectedRoute requiredRole="admin">
-                <AdminPropertyDashboard />
+                <AdminProperties />
               </ProtectedRoute>
             }
           />

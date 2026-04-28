@@ -1,31 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Search, Plus, Edit2, Trash2, Eye, EyeOff, ImagePlus, X, AlertCircle,
-  Home, Zap, Package, TrendingUp, MapPin, DollarSign, Bed, Bath, Square
+  Home, MapPin, DollarSign, Bed, Bath, Square, ArrowLeft, Star
 } from 'lucide-react';
-import axiosInstance from '../api/axiosInstance';
-
-// Property type categorization for routing to appropriate components
-const MAIN_PROPERTY_TYPES = [
-  'Apartment',
-  'Single Family',
-  'Multi Family',
-  'Studio',
-  'Penthouse',
-  'Office Space',
-  'Store Front',
-  'Warehouse',
-  'Workshop',
-  'Food Services',
-  'Guest Services',
-  'Medical Services',
-  'Mixed Commercial',
-  'Agricultural',
-  'Residential',
-  'Commercial',
-  'Industrial',
-  'Mixed Use'
-];
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../api/axiosInstance';
+import { userAPI, propertyAPI } from '../../api/endpoints';
 
 const ROOM_TYPES = [
   'single-room',
@@ -33,30 +13,13 @@ const ROOM_TYPES = [
   'premium-room',
   '1bhk',
   '2bhk',
-  '3bhk'
+  '3bhk',
+  'house',
+  'flat',
+  'land'
 ];
 
-// Map frontend property type names to backend enum values
 const propertyTypeMap = {
-  'Apartment': 'apartment',
-  'Single Family': 'single-family',
-  'Multi Family': 'multi-family',
-  'Studio': 'studio',
-  'Penthouse': 'penthouse',
-  'Office Space': 'office-space',
-  'Store Front': 'store-front',
-  'Warehouse': 'warehouse',
-  'Workshop': 'workshop',
-  'Food Services': 'food-services',
-  'Guest Services': 'guest-services',
-  'Medical Services': 'medical-services',
-  'Mixed Commercial': 'mixed-commercial',
-  'Agricultural': 'agricultural',
-  'Residential': 'residential',
-  'Commercial': 'commercial',
-  'Industrial': 'industrial',
-  'Mixed Use': 'mixed-use',
-  // Room types map to themselves
   'single-room': 'single-room',
   'sharing-room': 'sharing-room',
   'premium-room': 'premium-room',
@@ -68,17 +31,14 @@ const propertyTypeMap = {
   'land': 'land'
 };
 
-const isMainPropertyType = (type) => MAIN_PROPERTY_TYPES.includes(type);
-const isRoomType = (type) => ROOM_TYPES.includes(type);
 const getBackendType = (frontendType) => propertyTypeMap[frontendType] || frontendType;
 
-const AdminPropertyDashboard = () => {
+const AgentPropertyDashboard = () => {
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [purposeFilter, setPurposeFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState(null);
@@ -136,21 +96,20 @@ const AdminPropertyDashboard = () => {
     { value: 'water-supply', label: 'Water Supply' },
   ];
 
-  // Fetch properties
+  // Fetch agent's properties
   const fetchProperties = async (page = 1) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('page', page);
-      params.append('limit', 10);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (typeFilter !== 'all') params.append('type', typeFilter);
-      if (purposeFilter !== 'all') params.append('purpose', purposeFilter);
-      if (search) params.append('search', search);
+      const params = {
+        page,
+        limit: 10,
+      };
+      if (statusFilter !== 'all') params.status = statusFilter;
+      if (search) params.search = search;
 
-      const response = await axiosInstance.get(`/admin/properties?${params}`);
-      setProperties(response.data.data);
-      setTotalPages(response.data.pagination.pages);
+      const response = await userAPI.getMyListings(params);
+      setProperties(response.data.data || []);
+      setTotalPages(response.data.pagination?.pages || 1);
       setCurrentPage(page);
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -161,11 +120,22 @@ const AdminPropertyDashboard = () => {
     }
   };
 
-  // Fetch dashboard stats
+  // Fetch agent stats
   const fetchStats = async () => {
     try {
-      const response = await axiosInstance.get('/admin/stats');
-      setStats(response.data.data);
+      const response = await userAPI.getMyListings({ limit: 1000 });
+      const properties = response.data.data || [];
+
+      const activeCount = properties.filter(p => p.status === 'active').length;
+      const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
+      const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries?.length || 0), 0);
+
+      setStats({
+        totalProperties: properties.length,
+        activeProperties: activeCount,
+        totalViews,
+        totalInquiries,
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -173,19 +143,17 @@ const AdminPropertyDashboard = () => {
 
   const isInitialMount = useRef(true);
 
-  // Consolidated data fetching
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProperties(1);
+      fetchProperties(currentPage);
 
       if (isInitialMount.current) {
         fetchStats();
         isInitialMount.current = false;
       }
     }, 500);
-
     return () => clearTimeout(timer);
-  }, [search, statusFilter, typeFilter, purposeFilter]);
+  }, [currentPage, search, statusFilter]);
 
   // Handle image selection
   const handleImageSelect = (e) => {
@@ -198,7 +166,6 @@ const AdminPropertyDashboard = () => {
 
     console.log(`📸 Selected ${files.length} image(s)`);
 
-    // Validate file types and sizes
     const validFiles = [];
     files.forEach((file, index) => {
       if (!file.type.startsWith('image/')) {
@@ -238,8 +205,6 @@ const AdminPropertyDashboard = () => {
     setImagePreview((prev) => prev.filter((_, i) => i !== index));
   };
 
-
-
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,7 +214,6 @@ const AdminPropertyDashboard = () => {
       return;
     }
 
-    // Check if at least one image is selected when creating new property
     if (!editingProperty && selectedImages.length === 0) {
       alert('Please select at least one image for the property');
       return;
@@ -258,60 +222,31 @@ const AdminPropertyDashboard = () => {
     const submitFormData = new FormData();
     submitFormData.append('title', formData.title);
     submitFormData.append('description', formData.description);
-    submitFormData.append('type', getBackendType(formData.type)); // Convert to backend format
+    submitFormData.append('type', getBackendType(formData.type));
     submitFormData.append('purpose', formData.purpose);
     submitFormData.append('price', formData.price);
     submitFormData.append('currency', formData.currency);
     submitFormData.append('status', formData.status);
     submitFormData.append('featured', formData.featured);
 
-    // Log location data before sending
     console.log('📍 Location data to send:', formData.location);
-    const locationJSON = JSON.stringify(formData.location);
-    console.log('📍 Location JSON string:', locationJSON);
-    submitFormData.append('location', locationJSON);
+    submitFormData.append('location', JSON.stringify(formData.location));
 
-    // Log features data before sending
     console.log('🏠 Features data to send:', formData.features);
-    const featuresJSON = JSON.stringify(formData.features);
-    console.log('🏠 Features JSON string:', featuresJSON);
-    submitFormData.append('features', featuresJSON);
+    submitFormData.append('features', JSON.stringify(formData.features));
 
-    // Log amenities data before sending
     console.log('✨ Amenities data to send:', formData.amenities);
-    const amenitiesJSON = JSON.stringify(formData.amenities);
-    console.log('✨ Amenities JSON string:', amenitiesJSON);
-    submitFormData.append('amenities', amenitiesJSON);
+    submitFormData.append('amenities', JSON.stringify(formData.amenities));
 
-
-
-    // Handle images - only send new images if they exist, flag to preserve existing images
     console.log('📸 Images to upload:', selectedImages.length);
-    console.log('🖼️ Image previews (existing):', imagePreview.length);
 
     if (selectedImages.length > 0) {
-      selectedImages.forEach((file, index) => {
-        console.log(`Image ${index + 1}:`, file.name, file.size, file.type);
+      selectedImages.forEach((file) => {
         submitFormData.append('images', file);
       });
     } else if (editingProperty && imagePreview.length > 0) {
-      // For updates with no new images, signal to preserve existing images
       console.log('📌 Preserving existing images for update');
       submitFormData.append('preserveExistingImages', 'true');
-    }
-
-    // Agent data is managed separately - not sent in property form
-
-
-
-    // Log FormData contents
-    console.log('📦 FormData contents:');
-    for (let [key, value] of submitFormData.entries()) {
-      if (key === 'images') {
-        console.log(`  ${key}: [File] ${value.name}`);
-      } else if (key !== 'agentProfilePicture') {
-        console.log(`  ${key}: ${typeof value === 'object' ? JSON.stringify(value) : value}`);
-      }
     }
 
     try {
@@ -320,77 +255,24 @@ const AdminPropertyDashboard = () => {
 
       if (editingProperty) {
         console.log('🔄 Updating property:', editingProperty._id);
-        console.log('📦 Update data:', {
-          title: formData.title,
-          type: formData.type,
-          location: formData.location,
-          features: formData.features,
-          amenities: formData.amenities,
-          newImagesCount: selectedImages.length,
-        });
-
-        response = await axiosInstance.put(`/admin/properties/${editingProperty._id}`, submitFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        console.log('✅ Update response:', response.data);
-        console.log('✅ Images preserved:', selectedImages.length === 0 ? imagePreview.length : selectedImages.length);
+        response = await propertyAPI.updateProperty(editingProperty._id, submitFormData);
         alert('Property updated successfully!');
       } else {
         console.log('✅ Creating new property');
-        response = await axiosInstance.post('/admin/properties', submitFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        // Determine where the property will be displayed
-        const propertyType = formData.type;
-        let displayLocation = '';
-
-        if (isMainPropertyType(propertyType)) {
-          displayLocation = '📍 PropertyMap (Main Properties)';
-        } else if (isRoomType(propertyType)) {
-          displayLocation = '🛏️ RoomsAndFlats (Room Listings)';
-        } else {
-          displayLocation = '📋 General Listings';
-        }
-
-        alert(`Property created successfully!\n\n${displayLocation}\n\nThe property will appear in the appropriate section.`);
+        response = await propertyAPI.createProperty(submitFormData);
+        alert('Property created successfully!');
       }
 
       console.log('✅ Response:', response.data);
       resetForm();
 
-      // Force refresh with a slight delay to ensure backend has processed
       setTimeout(() => {
         fetchProperties(1);
         fetchStats();
       }, 1500);
     } catch (error) {
       console.error('❌ Error saving property:', error);
-      console.error('Response status:', error.response?.status);
-      console.error('Response data:', error.response?.data);
-      console.error('Error code:', error.code);
-      console.error('Full error:', error);
-
-      let errorMessage = 'Unknown error';
-
-      // Check for network error
-      if (!error.response) {
-        if (error.code === 'ECONNREFUSED') {
-          errorMessage = 'Cannot connect to server. Is the backend running on port 5000?';
-        } else if (error.message === 'Network Error') {
-          errorMessage = 'Network Error: Backend server is not responding. Please ensure the backend is running.';
-        } else {
-          errorMessage = `Network Error: ${error.message}`;
-        }
-      } else {
-        errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
-      }
-
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message;
       alert(`Error saving property: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -406,7 +288,7 @@ const AdminPropertyDashboard = () => {
     setFormData({
       title: '',
       description: '',
-      type: 'single-room',
+      type: 'flat',
       purpose: 'rent',
       price: '',
       currency: 'NPR',
@@ -441,40 +323,10 @@ const AdminPropertyDashboard = () => {
   // Edit property
   const handleEdit = (property) => {
     console.log('📝 Editing property:', property._id);
-    console.log('🔍 Full property data:', JSON.stringify(property, null, 2));
-    console.log('📍 Location data:', JSON.stringify(property.location, null, 2));
-    console.log('🏠 Features data:', JSON.stringify(property.features, null, 2));
-    console.log('✅ Agent data removed from form - will be managed separately');
-
     setEditingProperty(property);
 
-    // Carefully construct location object with all fields
     const locationData = property.location || {};
-    console.log('📝 Building location object with:', {
-      province: locationData.province,
-      district: locationData.district,
-      municipality: locationData.municipality,
-      ward: locationData.ward,
-      streetTole: locationData.streetTole,
-      address: locationData.address,
-      city: locationData.city,
-      lat: locationData.lat,
-      lng: locationData.lng,
-      landmark: locationData.landmark,
-    });
-
-    // Carefully construct features object with all fields
     const featuresData = property.features || {};
-    console.log('🏠 Building features object with:', {
-      bedrooms: featuresData.bedrooms,
-      bathrooms: featuresData.bathrooms,
-      area: featuresData.area,
-      furnished: featuresData.furnished,
-      builtYear: featuresData.builtYear,
-      floor: featuresData.floor,
-      facing: featuresData.facing,
-      totalFloors: featuresData.totalFloors,
-    });
 
     setFormData({
       title: property.title || '',
@@ -493,8 +345,8 @@ const AdminPropertyDashboard = () => {
         streetTole: locationData.streetTole || '',
         city: locationData.city || 'Kathmandu',
         address: locationData.address || '',
-        lat: locationData.lat || locationData.coordinates?.coordinates?.[1] || 27.7172,
-        lng: locationData.lng || locationData.coordinates?.coordinates?.[0] || 85.3240,
+        lat: locationData.lat || 27.7172,
+        lng: locationData.lng || 85.3240,
         landmark: locationData.landmark || '',
       },
       features: {
@@ -510,259 +362,184 @@ const AdminPropertyDashboard = () => {
       amenities: property.amenities || [],
     });
 
+    setImagePreview(property.images || []);
     setSelectedImages([]);
-    setImagePreview(property.images?.map((img) => img.url) || []);
     setShowModal(true);
-    console.log('✅ Property loaded for editing - Form data set');
   };
 
   // Delete property
-  const handleDelete = async (id) => {
+  const handleDelete = async (propertyId) => {
     if (window.confirm('Are you sure you want to delete this property?')) {
       try {
-        await axiosInstance.delete(`/admin/properties/${id}`);
+        await propertyAPI.deleteProperty(propertyId);
         alert('Property deleted successfully!');
-        fetchProperties(currentPage);
+        fetchProperties(1);
+        fetchStats();
       } catch (error) {
         console.error('Error deleting property:', error);
-        alert('Error deleting property');
+        alert(`Error deleting property: ${error.response?.data?.message || error.message}`);
       }
     }
   };
 
-  // Update property status
-  const handleStatusChange = async (id, newStatus) => {
+  // Toggle property visibility
+  const handleToggleVisibility = async (propertyId, newStatus) => {
     try {
-      await axiosInstance.patch(`/admin/properties/${id}/status`, { status: newStatus });
+      await propertyAPI.updateProperty(propertyId, { status: newStatus });
       fetchProperties(currentPage);
     } catch (error) {
-      console.error('Error updating status:', error);
-      alert('Error updating status');
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'archived':
-        return 'bg-gray-100 text-gray-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-blue-100 text-blue-800';
+      console.error('Error updating property status:', error);
+      alert(`Error updating property: ${error.response?.data?.message || error.message}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-blue-300 bg-clip-text text-transparent">
-              Property Management Dashboard
-            </h1>
-            <p className="text-slate-400 mt-2">Manage and upload properties</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header with Back Button */}
+        <div className="flex items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/agent/profile')}
+              className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent">
+                Property Dashboard
+              </h1>
+              <p className="text-slate-400 text-sm mt-1">Manage your property listings</p>
+            </div>
           </div>
+
           <button
             onClick={() => {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/50 transition font-semibold"
+            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-blue-500/40 transition-all"
           >
             <Plus size={20} />
-            Add Property
+            Post New Property
           </button>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Total Properties</p>
-                  <p className="text-3xl font-bold text-blue-400">{stats?.totalProperties || 0}</p>
-                </div>
-                <Home size={40} className="text-blue-500/30" />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-6">
+              <p className="text-slate-400 text-sm">Total Properties</p>
+              <p className="text-3xl font-bold text-white mt-2">{stats.totalProperties || 0}</p>
             </div>
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Active</p>
-                  <p className="text-3xl font-bold text-green-400">{stats?.activeProperties || 0}</p>
-                </div>
-                <Eye size={40} className="text-green-500/30" />
-              </div>
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-6">
+              <p className="text-slate-400 text-sm">Active</p>
+              <p className="text-3xl font-bold text-green-400 mt-2">{stats.activeProperties || 0}</p>
             </div>
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">Pending</p>
-                  <p className="text-3xl font-bold text-yellow-400">{stats?.pendingProperties || 0}</p>
-                </div>
-                <Zap size={40} className="text-yellow-500/30" />
-              </div>
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-6">
+              <p className="text-slate-400 text-sm">For Rent</p>
+              <p className="text-3xl font-bold text-blue-400 mt-2">{stats.totalProperties - (stats.activeProperties || 0)}</p>
             </div>
-            <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm">For Rent</p>
-                  <p className="text-3xl font-bold text-purple-400">{stats?.rentProperties || 0}</p>
-                </div>
-                <Package size={40} className="text-purple-500/30" />
-              </div>
+            <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl p-6">
+              <p className="text-slate-400 text-sm">Total Views</p>
+              <p className="text-3xl font-bold text-yellow-400 mt-2">{stats.totalViews || 0}</p>
             </div>
           </div>
         )}
-      </div>
 
-      {/* Filters */}
-      <div className="mb-6 bg-slate-700/30 border border-slate-600 rounded-xl p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="text-sm text-slate-400 block mb-2">Search</label>
+        {/* Filters */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
+              placeholder="Search properties..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, location..."
-              className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+              className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-2">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="archived">Archived</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-2">Type</label>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-            >
-              <option value="all">All Types</option>
-              <optgroup label="🛏️ Rooms">
-                <option value="single-room">Single Room</option>
-                <option value="sharing-room">Sharing Room</option>
-                <option value="premium-room">Premium Room</option>
-              </optgroup>
-              <optgroup label="🏠 Residential">
-                <option value="1bhk">1 BHK</option>
-                <option value="2bhk">2 BHK</option>
-                <option value="3bhk">3 BHK</option>
-                <option value="Apartment">🏘️Apartment</option>
-                <option value="Single Family">Single Family</option>
-                <option value="Multi Family">Multi Family</option>
-                <option value="Studio">Studio</option>
-                <option value="Penthouse">Penthouse</option>
-              </optgroup>
-              <optgroup label="🏢 Commercial">
-                <option value="Office Space">Office Space</option>
-                <option value="Store Front">Store Front</option>
-                <option value="Mixed Commercial">Mixed Commercial</option>
-              </optgroup>
-              <optgroup label="🏭 Industrial">
-                <option value="Warehouse">Warehouse</option>
-                <option value="Workshop">Workshop</option>
-              </optgroup>
-              <optgroup label="🍽️ Services">
-                <option value="Food Services">Food Services</option>
-                <option value="Guest Services">Guest Services</option>
-                <option value="Medical Services">Medical Services</option>
-              </optgroup>
-              <optgroup label="🌍 Special Properties">
-                <option value="Agricultural">Agricultural</option>
-                <option value="Mixed Use">Mixed Use</option>
-              </optgroup>
-              <optgroup label="📋 Categories">
-                <option value="Residential">Residential</option>
-                <option value="Commercial">Commercial</option>
-                <option value="Industrial">Industrial</option>
-              </optgroup>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm text-slate-400 block mb-2">Purpose</label>
-            <select
-              value={purposeFilter}
-              onChange={(e) => setPurposeFilter(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-            >
-              <option value="all">All Purposes</option>
-              <option value="rent">Rent</option>
-              <option value="sale">Sale</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      {/* Properties Table */}
-      <div className="bg-slate-700/30 border border-slate-600 rounded-xl overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-slate-400">Loading properties...</div>
-        ) : properties.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">No properties found</div>
-        ) : (
-          <>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+
+        {/* Properties Table */}
+        <div className="bg-slate-800/50 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden">
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="inline-block animate-spin">
+                <div className="w-8 h-8 border-4 border-slate-600 border-t-blue-500 rounded-full"></div>
+              </div>
+              <p className="text-slate-400 mt-4">Loading properties...</p>
+            </div>
+          ) : properties.length === 0 ? (
+            <div className="p-12 text-center">
+              <Home className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-400 text-lg">No properties yet</p>
+              <p className="text-slate-500 text-sm mt-2">Start by posting your first property</p>
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-800/50 border-b border-slate-600">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Property</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Type</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Price</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Status</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Featured</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Actions</th>
+                <thead>
+                  <tr className="border-b border-slate-700/50">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Property</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Type</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Price</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Featured</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-slate-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {properties.map((property) => (
-                    <tr key={property._id} className="border-b border-slate-600 hover:bg-slate-700/20 transition">
+                    <tr key={property._id} className="border-b border-slate-700/30 hover:bg-slate-700/20 transition-colors">
                       <td className="px-6 py-4">
-                        <div>
-                          <p className="font-semibold text-white truncate max-w-xs">{property.title}</p>
-                          <p className="text-sm text-slate-400 flex items-center gap-1">
-                            <MapPin size={14} />
-                            {property.location?.city}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          {property.images && property.images[0] && (
+                            <img
+                              src={property.images[0]}
+                              alt={property.title}
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium text-white truncate max-w-xs">{property.title}</p>
+                            <p className="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                              <MapPin size={14} />
+                              {property.location?.city || 'N/A'}
+                            </p>
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm">
-                        <span className="px-3 py-1 bg-slate-700/50 rounded-full capitalize">{property.type}</span>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-slate-300 capitalize">{property.type}</span>
                       </td>
                       <td className="px-6 py-4">
                         <p className="font-semibold text-blue-400">
-                          ₹ {property.price.toLocaleString()}
+                          {property.currency} {property.price?.toLocaleString()}
                         </p>
                         <p className="text-xs text-slate-400">{property.purpose}</p>
                       </td>
                       <td className="px-6 py-4">
                         <select
                           value={property.status}
-                          onChange={(e) => handleStatusChange(property._id, e.target.value)}
-                          className={`px-3 py-1 rounded-full text-sm font-semibold border-0 ${getStatusColor(property.status)} cursor-pointer`}
+                          onChange={(e) => handleToggleVisibility(property._id, e.target.value)}
+                          className={`px-3 py-1 rounded-full text-sm font-semibold border-0 cursor-pointer ${property.status === 'active'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                            }`}
                         >
                           <option value="active">Active</option>
-                          <option value="pending">Pending</option>
-                          <option value="archived">Archived</option>
-                          <option value="rejected">Rejected</option>
+                          <option value="inactive">Inactive</option>
                         </select>
                       </td>
                       <td className="px-6 py-4">
@@ -795,8 +572,10 @@ const AdminPropertyDashboard = () => {
                 </tbody>
               </table>
             </div>
+          )}
 
-            {/* Pagination */}
+          {/* Pagination */}
+          {totalPages > 1 && (
             <div className="bg-slate-800/50 border-t border-slate-600 px-6 py-4 flex items-center justify-between">
               <div className="text-sm text-slate-400">
                 Page {currentPage} of {totalPages}
@@ -818,8 +597,8 @@ const AdminPropertyDashboard = () => {
                 </button>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Property Modal */}
@@ -841,103 +620,90 @@ const AdminPropertyDashboard = () => {
 
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-
               {/* Basic Info */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-lg text-blue-400">Basic Information</h3>
-                <input
-                  type="text"
-                  placeholder="Property Title"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                />
-                <textarea
-                  placeholder="Description"
-                  required
-                  rows="3"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white resize-none"
-                />
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Home size={20} className="text-blue-400" />
+                  Basic Information
+                </h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Property Title"
+                    required
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  />
+                  <textarea
+                    placeholder="Description"
+                    required
+                    rows="3"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white resize-none"
+                  />
+                </div>
               </div>
 
               {/* Property Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                >
-                  <optgroup label="🛏️ Rooms" className='text-black'>
-                    <option value="single-room">Single Room</option>
-                    <option value="sharing-room">Sharing Room</option>
-                    <option value="premium-room">Premium Room</option>
-                  </optgroup>
-                  <optgroup label="🏠 Residential" className='text-black'>
-                    <option value="1bhk">1 BHK</option>
-                    <option value="2bhk">2 BHK</option>
-                    <option value="3bhk">3 BHK</option>
-                    <option value="Apartment" className='text-black'>Apartment</option>
-                    <option value="Single Family">Single Family</option>
-                    <option value="Multi Family">Multi Family</option>
-                    <option value="Studio">Studio</option>
-                    <option value="Penthouse">Penthouse</option>
-                  </optgroup>
-                  <optgroup label="🏢 Commercial" className='text-black'>
-                    <option value="Office Space">Office Space</option>
-                    <option value="Store Front">Store Front</option>
-                    <option value="Mixed Commercial">Mixed Commercial</option>
-                  </optgroup>
-                  <optgroup label="🏭 Industrial" className='text-black' >
-                    <option value="Warehouse">Warehouse</option>
-                    <option value="Workshop">Workshop</option>
-                  </optgroup>
-                  <optgroup label="🍽️ Services" className='text-black'>
-                    <option value="Food Services">Food Services</option>
-                    <option value="Guest Services">Guest Services</option>
-                    <option value="Medical Services">Medical Services</option>
-                  </optgroup>
-                  <optgroup label="🌍 Special Properties" className='text-black'>
-                    <option value="Agricultural">Agricultural</option>
-                    <option value="Mixed Use">Mixed Use</option>
-                  </optgroup>
-                  <optgroup label="📋 Categories" className='text-black'>
-                    <option value="Residential">Residential</option>
-                    <option value="Commercial">Commercial</option>
-                    <option value="Industrial">Industrial</option>
-                  </optgroup>
-                </select>
-                <select
-                  value={formData.purpose}
-                  onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                  className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                >
-                  <option value="rent">Rent</option>
-                  <option value="sale">Sale</option>
-                </select>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-blue-400">Property Details</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  >
+                    <optgroup label="🛏️ Rooms" className='text-black'>
+                      <option value="single-room">Single Room</option>
+                      <option value="sharing-room">Sharing Room</option>
+                      <option value="premium-room">Premium Room</option>
+                    </optgroup>
+                    <optgroup label="🏠 Residential" className='text-black'>
+                      <option value="1bhk">1 BHK</option>
+                      <option value="2bhk">2 BHK</option>
+                      <option value="3bhk">3 BHK</option>
+                      <option value="flat">Flat</option>
+                      <option value="house">House</option>
+                    </optgroup>
+                    <optgroup label="🌾 Land" className='text-black'>
+                      <option value="land">Land</option>
+                    </optgroup>
+                  </select>
+                  <select
+                    value={formData.purpose}
+                    onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+                    className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  >
+                    <option value="rent">Rent</option>
+                    <option value="sale">Sale</option>
+                  </select>
+                </div>
               </div>
 
               {/* Price */}
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="number"
-                  placeholder="Price"
-                  required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                />
-                <select
-                  value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                >
-                  <option value="NPR">NPR</option>
-                  <option value="USD">USD</option>
-                  <option value="INR">INR</option>
-                </select>
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg text-blue-400">Price</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="number"
+                    placeholder="Price"
+                    required
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  />
+                  <select
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                    className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                  >
+                    <option value="NPR">NPR</option>
+                    <option value="USD">USD</option>
+                    <option value="INR">INR</option>
+                  </select>
+                </div>
               </div>
 
               {/* Location */}
@@ -1242,8 +1008,6 @@ const AdminPropertyDashboard = () => {
                 </div>
               </div>
 
-
-
               {/* Status & Featured */}
               <div className="grid grid-cols-2 gap-4">
                 <select
@@ -1252,8 +1016,7 @@ const AdminPropertyDashboard = () => {
                   className="px-4 py-2.5 bg-slate-700/40 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                 >
                   <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="archived">Archived</option>
+                  <option value="inactive">Inactive</option>
                 </select>
                 <label className="flex items-center gap-3 px-4 py-2.5">
                   <input
@@ -1331,4 +1094,4 @@ const AdminPropertyDashboard = () => {
   );
 };
 
-export default AdminPropertyDashboard;
+export default AgentPropertyDashboard;

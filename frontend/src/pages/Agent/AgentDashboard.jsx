@@ -6,8 +6,8 @@ import {
   CheckCircle, Clock, AlertCircle, Loader, LogOut,
   MessageSquare, Heart, ChevronRight
 } from 'lucide-react';
-import { userAPI, propertyAPI } from '../api/endpoints';
-import { useAuthStore } from '../store.js';
+import { userAPI, propertyAPI } from '../../api/endpoints.js';
+import { useAuthStore } from '../../store.js';
 
 const AgentDashboard = () => {
   const navigate = useNavigate();
