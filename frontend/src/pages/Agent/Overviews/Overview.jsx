@@ -121,8 +121,8 @@ const Overview = ({ stats, recentListings, navigate, setActiveTab }) => {
             <h3 className="text-xl font-black text-white tracking-tight mb-6">Market Intelligence</h3>
             <div className="space-y-6">
               {[
-                { label: 'Active Inquiries', value: '12', icon: MessageSquare, color: 'text-blue-400' },
-                { label: 'Profile Interest', value: '840', icon: Heart, color: 'text-rose-400' },
+                { label: 'Active Inquiries', value: stats.activeInquiries || '0', icon: MessageSquare, color: 'text-blue-400' },
+                { label: 'Profile Visibility', value: stats.totalViews || '0', icon: Eye, color: 'text-rose-400' },
                 { label: 'Avg. Response', value: '2.4h', icon: TrendingUp, color: 'text-emerald-400' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center justify-between">
@@ -139,8 +139,8 @@ const Overview = ({ stats, recentListings, navigate, setActiveTab }) => {
             <div className="mt-8 pt-8 border-t border-slate-800">
                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Top Performing Area</p>
                <div className="flex items-center justify-between">
-                 <span className="text-sm font-black text-white">Kathmandu Valley</span>
-                 <span className="text-xs font-bold text-emerald-400">+12.5%</span>
+                 <span className="text-sm font-black text-white">{stats.topArea || 'N/A'}</span>
+                 <span className="text-xs font-bold text-emerald-400">{stats.topAreaGrowth || '+0%'}</span>
                </div>
             </div>
           </div>

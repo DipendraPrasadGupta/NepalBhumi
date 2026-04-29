@@ -43,6 +43,13 @@ const AgentProfile = () => {
     experienceYears: user?.experienceYears || 0,
     salesCount: user?.salesCount || 0,
     city: user?.location || user?.address?.city || '',
+    state: user?.address?.state || '',
+    zipCode: user?.address?.zipCode || '',
+    whatsapp: user?.socialLinks?.whatsapp || '',
+    facebook: user?.socialLinks?.facebook || '',
+    twitter: user?.socialLinks?.twitter || '',
+    instagram: user?.socialLinks?.instagram || '',
+    linkedin: user?.socialLinks?.linkedin || '',
   });
 
   const handleImageChange = async (e) => {
@@ -91,11 +98,19 @@ const AgentProfile = () => {
       data.append('residence', formData.residence);
       data.append('address', formData.streetAddress);
       data.append('city', formData.city);
+      data.append('state', formData.state);
+      data.append('zipCode', formData.zipCode);
       data.append('apartment', formData.apartment);
+      
+      data.append('socialLinks[whatsapp]', formData.whatsapp);
+      data.append('socialLinks[facebook]', formData.facebook);
+      data.append('socialLinks[twitter]', formData.twitter);
+      data.append('socialLinks[instagram]', formData.instagram);
+      data.append('socialLinks[linkedin]', formData.linkedin);
       
       if (formData.languages) {
         const langs = formData.languages.split(',').map(l => l.trim()).filter(l => l);
-        langs.forEach((l, i) => data.append(`languages[${i}]`, l));
+        langs.forEach(l => data.append('languages', l));
       }
 
       if (profileImage) {
@@ -202,6 +217,7 @@ const AgentProfile = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <InputField label="Full Professional Name" icon={User} value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
+              <InputField label="Direct Phone Line" icon={Phone} value={formData.phone} onChange={(v) => setFormData({...formData, phone: v})} />
               <InputField label="Assigned Username" icon={Hash} value={formData.username} onChange={(v) => setFormData({...formData, username: v})} />
               <InputField label="Current Agency" icon={Building} value={formData.agencyName} onChange={(v) => setFormData({...formData, agencyName: v})} />
               <InputField label="License ID Number" icon={Hash} value={formData.licenseNumber} onChange={(v) => setFormData({...formData, licenseNumber: v})} />
@@ -227,8 +243,31 @@ const AgentProfile = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <InputField label="Primary Residence" icon={Navigation} value={formData.residence} onChange={(v) => setFormData({...formData, residence: v})} />
               <InputField label="Operating City" icon={MapPin} value={formData.city} onChange={(v) => setFormData({...formData, city: v})} />
+              <InputField label="Province / State" icon={Navigation} value={formData.state} onChange={(v) => setFormData({...formData, state: v})} />
               <InputField label="Street Address" icon={MapPin} value={formData.streetAddress} onChange={(v) => setFormData({...formData, streetAddress: v})} />
+              <InputField label="Zip / Postal Code" icon={Hash} value={formData.zipCode} onChange={(v) => setFormData({...formData, zipCode: v})} />
               <InputField label="Apartment / Suite" icon={Hash} value={formData.apartment} onChange={(v) => setFormData({...formData, apartment: v})} />
+            </div>
+          </div>
+
+          {/* Section: Social Connectivity */}
+          <div className="bg-[#0f172a]/40 backdrop-blur-xl border border-slate-800/50 rounded-[2.5rem] p-10 shadow-2xl space-y-10">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-400">
+                <Globe2 size={24} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Social Connectivity</h3>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Platform Syndicate</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <InputField label="WhatsApp Number" icon={Phone} value={formData.whatsapp} onChange={(v) => setFormData({...formData, whatsapp: v})} placeholder="+977..." />
+              <InputField label="Facebook Profile" icon={LinkIcon} value={formData.facebook} onChange={(v) => setFormData({...formData, facebook: v})} placeholder="https://facebook.com/..." />
+              <InputField label="Twitter Profile" icon={LinkIcon} value={formData.twitter} onChange={(v) => setFormData({...formData, twitter: v})} placeholder="https://twitter.com/..." />
+              <InputField label="Instagram Handle" icon={LinkIcon} value={formData.instagram} onChange={(v) => setFormData({...formData, instagram: v})} placeholder="@username" />
+              <InputField label="LinkedIn Profile" icon={LinkIcon} value={formData.linkedin} onChange={(v) => setFormData({...formData, linkedin: v})} placeholder="https://linkedin.com/in/..." fullWidth />
             </div>
           </div>
 

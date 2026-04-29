@@ -10,6 +10,8 @@ import {
   changePassword,
   deleteAccount,
   getAgents,
+  toggleSaveAgent,
+  getSavedAgents,
 } from '../controllers/userController.js';
 import { uploadProfileImage, uploadKYCDocs } from '../middleware/upload.js';
 
@@ -25,5 +27,9 @@ router.get('/listings', protect, getMyListings);
 router.post('/kyc', protect, uploadKYCDocs, uploadKYC);
 router.post('/change-password', protect, changePassword);
 router.delete('/delete-account', protect, deleteAccount);
+
+// Saved Agents routes
+router.post('/agents/:id/save', protect, toggleSaveAgent);
+router.get('/saved-agents', protect, getSavedAgents);
 
 export default router;

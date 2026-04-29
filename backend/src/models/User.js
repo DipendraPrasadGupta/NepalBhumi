@@ -95,11 +95,19 @@ const userSchema = new mongoose.Schema(
       whatsapp: String,
       facebook: String,
       instagram: String,
+      twitter: String,
+      linkedin: String,
     },
     savedProperties: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Property',
+      },
+    ],
+    savedAgents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
       },
     ],
     ratings: {

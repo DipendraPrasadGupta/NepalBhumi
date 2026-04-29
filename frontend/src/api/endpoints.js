@@ -26,7 +26,9 @@ export const propertyAPI = {
 // User APIs
 export const userAPI = {
   getProfile: () => api.get('/users/profile'),
+  getPublicProfile: (id) => api.get(`/users/profile/${id}`),
   getAgents: (params) => api.get('/users/agents', { params }),
+  getAgentListings: (userId, params) => api.get(`/users/${userId}/listings`, { params }),
   updateProfile: (data) => api.put('/users/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
@@ -36,6 +38,8 @@ export const userAPI = {
   }),
   changePassword: (data) => api.post('/users/change-password', data),
   deleteAccount: (data) => api.delete('/users/delete-account', { data }),
+  toggleSaveAgent: (id) => api.post(`/users/agents/${id}/save`),
+  getSavedAgents: () => api.get('/users/saved-agents'),
 };
 
 // Inquiry APIs

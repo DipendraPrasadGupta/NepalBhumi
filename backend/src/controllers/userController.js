@@ -125,7 +125,7 @@ export const getAgents = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const { 
-      name, email, bio, phone, address, city, district, province, postalCode, socialLinks,
+      name, email, bio, phone, address, city, district, province, state, postalCode, zipCode, socialLinks,
       username, work, dreamTravel, languages, birthDate,
       funFacts, timeSink, residence, obsession,
       licenseNumber, experienceYears, salesCount, homePage, agencyInfo, avatar 
@@ -143,23 +143,35 @@ export const updateUserProfile = async (req, res) => {
     if (phone) user.phone = phone;
     
     // Handle address object - map frontend fields to model fields
-    if (address || city || district || province || postalCode || req.body.apartment) {
+    if (address || city || district || province || state || postalCode || zipCode || req.body.apartment) {
       user.address = {
         ...user.address,
         street: address || user.address?.street || '',
         city: city || user.address?.city || '',
-        state: province || user.address?.state || '',
-        zipCode: postalCode || user.address?.zipCode || '',
+        state: state || province || user.address?.state || '',
+        zipCode: zipCode || postalCode || user.address?.zipCode || '',
         apartment: req.body.apartment || user.address?.apartment || '',
         country: user.address?.country || '',
       };
     }
 
-    if (socialLinks) user.socialLinks = { ...user.socialLinks, ...socialLinks };
+    // Gather social links from various possible formats
+    const gatheredSocialLinks = {
+      whatsapp: socialLinks?.whatsapp || req.body['socialLinks[whatsapp]'] || '',
+      facebook: socialLinks?.facebook || req.body['socialLinks[facebook]'] || '',
+      twitter: socialLinks?.twitter || req.body['socialLinks[twitter]'] || '',
+      instagram: socialLinks?.instagram || req.body['socialLinks[instagram]'] || '',
+      linkedin: socialLinks?.linkedin || req.body['socialLinks[linkedin]'] || '',
+    };
+
+    // Only update if at least one link is provided or we want to allow clearing
+    user.socialLinks = { ...user.socialLinks, ...gatheredSocialLinks };
     if (username) user.username = username;
     if (work) user.work = work;
     if (dreamTravel) user.dreamTravel = dreamTravel;
-    if (languages) user.languages = languages;
+    if (languages) {
+      user.languages = Array.isArray(languages) ? languages : [languages];
+    }
     if (birthDate) user.birthDate = birthDate;
     if (funFacts) user.funFacts = funFacts;
     if (timeSink) user.timeSink = timeSink;
@@ -169,7 +181,16 @@ export const updateUserProfile = async (req, res) => {
     if (experienceYears !== undefined) user.experienceYears = experienceYears;
     if (salesCount !== undefined) user.salesCount = salesCount;
     if (homePage) user.homePage = homePage;
-    if (agencyInfo) user.agencyInfo = { ...user.agencyInfo, ...agencyInfo };
+    
+    // Gather agency info from possible flat formats
+    const gatheredAgencyInfo = {
+      name: agencyInfo?.name || req.body['agencyInfo[name]'] || user.agencyInfo?.name || '',
+      address: agencyInfo?.address || req.body['agencyInfo[address]'] || user.agencyInfo?.address || '',
+      phone: agencyInfo?.phone || req.body['agencyInfo[phone]'] || user.agencyInfo?.phone || '',
+    };
+    if (gatheredAgencyInfo.name || gatheredAgencyInfo.address || gatheredAgencyInfo.phone) {
+      user.agencyInfo = gatheredAgencyInfo;
+    }
 
     // Handle avatar upload (both base64 data URI and file uploads)
     if (avatar && typeof avatar === 'string' && avatar.startsWith('data:')) {
@@ -383,6 +404,62 @@ export const deleteAccount = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Account deleted successfully',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const toggleSaveAgent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    if (id === userId) {
+      return res.status(400).json({ message: 'You cannot save your own profile' });
+    }
+
+    const user = await User.findById(userId);
+    const agent = await User.findById(id);
+
+    if (!user || !agent) {
+      return res.status(404).json({ message: 'User or Agent not found' });
+    }
+
+    const isSaved = user.savedAgents.includes(id);
+
+    if (isSaved) {
+      user.savedAgents = user.savedAgents.filter((agentId) => agentId.toString() !== id);
+    } else {
+      user.savedAgents.push(id);
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: isSaved ? 'Agent removed from saved list' : 'Agent saved successfully',
+      isSaved: !isSaved,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSavedAgents = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).populate({
+      path: 'savedAgents',
+      select: 'name email phone avatarUrl work location address ratings salesCount experienceYears agencyInfo',
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user.savedAgents,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

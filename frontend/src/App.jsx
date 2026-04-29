@@ -14,7 +14,8 @@ import UserProfile from './pages/UserProfile';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProperties from './pages/Admin/Properties/AdminProperties';
 import Agents from './pages/Agents';
-import AgentProfile from './pages/Agent/Profile/Profile';
+import AgentProfileSettings from './pages/Agent/Profile/Profile';
+import PublicAgentProfile from './pages/Agent/Profile/PublicAgentProfile';
 import AgentPropertyDashboard from './pages/Agent/AgentPropertyDashboard';
 import AgentDashboard from './pages/Agent/AgentDashboard';
 import NotFound from './pages/NotFound';
@@ -85,11 +86,11 @@ function AppContent() {
             path="/agent/profile"
             element={
               <ProtectedRoute requiredRole="agent">
-                <AgentProfile />
+                <AgentProfileSettings />
               </ProtectedRoute>
             }
           />
-          <Route path="/agent/:id" element={<AgentProfile />} />
+          <Route path="/agent/:id" element={<PublicAgentProfile />} />
           <Route
             path="/agent/properties"
             element={
