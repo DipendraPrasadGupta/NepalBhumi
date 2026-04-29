@@ -215,6 +215,22 @@ const AdminProperties = () => {
     }
   };
 
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      setLoading(true);
+      await axiosInstance.patch(`/admin/properties/${id}/status`, { status: newStatus });
+      
+      // Update local state for immediate feedback
+      setProperties(prev => prev.map(p => p._id === id ? { ...p, status: newStatus } : p));
+      
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Failed to update status');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const InputLabel = ({ children }) => (
     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em] ml-1 mb-2 block">
       {children}
@@ -330,16 +346,29 @@ const AdminProperties = () => {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm ${
-                      prop.status === 'active' 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                      : prop.status === 'pending'
-                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                      : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                    }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${prop.status === 'active' ? 'bg-emerald-400' : prop.status === 'pending' ? 'bg-amber-400' : 'bg-slate-400'} animate-pulse`}></div>
-                      {prop.status}
-                    </span>
+                    <div className="relative group/status">
+                      <select 
+                        value={prop.status}
+                        onChange={(e) => handleStatusChange(prop._id, e.target.value)}
+                        className={`appearance-none pl-3.5 pr-8 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm cursor-pointer outline-none transition-all ${
+                          prop.status === 'active' 
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20' 
+                          : prop.status === 'pending'
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+                          : prop.status === 'rejected'
+                          ? 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                          : 'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/20'
+                        }`}
+                      >
+                        <option value="active" className="bg-slate-900 text-emerald-400">Active</option>
+                        <option value="pending" className="bg-slate-900 text-amber-400">Pending</option>
+                        <option value="archived" className="bg-slate-900 text-slate-400">Archived</option>
+                        <option value="rejected" className="bg-slate-900 text-red-400">Rejected</option>
+                      </select>
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-current opacity-50">
+                        <Filter size={10} />
+                      </div>
+                    </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2.5">

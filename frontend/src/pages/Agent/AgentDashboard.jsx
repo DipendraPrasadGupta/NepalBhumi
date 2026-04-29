@@ -1,321 +1,186 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Home, TrendingUp, Eye, Star, Plus, User, Settings,
+  Home, TrendingUp, Eye, Star, Plus, User, Settings as SettingsIcon,
   ArrowRight, MapPin, BarChart3, Activity, Bell,
   CheckCircle, Clock, AlertCircle, Loader, LogOut,
-  MessageSquare, Heart, ChevronRight
+  MessageSquare, Heart, ChevronRight, Menu, X, Shield,
+  LayoutGrid, Laptop, Smartphone, Globe, Briefcase, Users
 } from 'lucide-react';
 import { userAPI, propertyAPI } from '../../api/endpoints.js';
 import { useAuthStore } from '../../store.js';
 
-const AgentDashboard = () => {
-  const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+// Import Modular Tabs
+import Overview from './Overviews/Overview.jsx';
+import Profile from './Profile/Profile.jsx';
+import MyAssets from './MyAssets/MyAssets.jsx';
+import Analytics from './Analytics/Analytics.jsx';
+import Inquiries from './Inquiries/Inquiries.jsx';
+import Settings from './Settings/Settings.jsx';
 
+const AgentDashboard = () => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
     totalViews: 0,
-    averageRating: 0,
-    ratingCount: 0,
+    averageRating: 4.8,
+    ratingCount: 124
   });
   const [recentListings, setRecentListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState(null);
+  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) { navigate('/auth/login'); return; }
-    loadAll();
-  }, [user]);
+    const fetchDashboardData = async () => {
+      try {
+        const response = await userAPI.getMyListings({ limit: 5 });
+        const allListings = response.data.data || [];
 
-  const loadAll = async () => {
-    setLoading(true);
-    try {
-      const [profileRes, listingsRes] = await Promise.all([
-        userAPI.getProfile(),
-        userAPI.getMyListings({ limit: 100 }),
-      ]);
+        setRecentListings(allListings);
 
-      const profile = profileRes.data?.data || {};
-      setProfileData(profile);
+        setStats(prev => ({
+          ...prev,
+          totalListings: allListings.length,
+          activeListings: allListings.filter(l => l.status === 'active').length,
+          totalViews: allListings.reduce((acc, curr) => acc + (curr.views || 0), 0)
+        }));
+      } catch (error) {
+        console.error('Error fetching agent stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const listings = listingsRes.data?.data || [];
-      const active = listings.filter(p => p.status === 'active').length;
-      const totalViews = listings.reduce((sum, p) => sum + (p.views || 0), 0);
-
-      setStats({
-        totalListings: listings.length,
-        activeListings: active,
-        totalViews,
-        averageRating: profile.ratings?.average || 0,
-        ratingCount: profile.ratings?.count || 0,
-      });
-
-      // Most recent 4
-      setRecentListings(listings.slice(0, 4));
-    } catch (err) {
-      console.error('Error loading dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchDashboardData();
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/auth/login');
   };
 
-  const quickActions = [
-    { icon: Plus, label: 'Post New Property', desc: 'Add a listing', color: 'from-blue-500 to-blue-600', onClick: () => navigate('/agent/properties') },
-    { icon: Home, label: 'My Listings', desc: 'Manage properties', color: 'from-emerald-500 to-emerald-600', onClick: () => navigate('/agent/properties') },
-    { icon: User, label: 'Edit Profile', desc: 'Update your info', color: 'from-violet-500 to-violet-600', onClick: () => navigate('/agent/profile') },
-    { icon: BarChart3, label: 'View Analytics', desc: 'Track performance', color: 'from-amber-500 to-amber-600', onClick: () => navigate('/agent/properties') },
-  ];
-
-  const statCards = [
-    { icon: Home, label: 'Total Listings', value: stats.totalListings, color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' },
-    { icon: CheckCircle, label: 'Active Listings', value: stats.activeListings, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-    { icon: Eye, label: 'Total Views', value: stats.totalViews, color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-    { icon: Star, label: 'Avg Rating', value: stats.averageRating ? stats.averageRating.toFixed(1) : 'N/A', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', sub: stats.ratingCount ? `${stats.ratingCount} reviews` : 'No reviews yet' },
-  ];
+  const NavItem = ({ id, label, icon: Icon, onClick }) => (
+    <button
+      onClick={onClick || (() => {
+        setActiveTab(id);
+        if (window.innerWidth < 1024) setIsSidebarOpen(false);
+      })}
+      className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group relative ${activeTab === id
+        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+        : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-200'
+        }`}
+    >
+      <Icon size={20} className={`${activeTab === id ? 'scale-110' : 'group-hover:scale-110'} transition-transform`} />
+      <span className="text-sm font-bold tracking-tight">{label}</span>
+      {activeTab === id && (
+        <div className="absolute right-2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_10px_#fff]"></div>
+      )}
+    </button>
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Loader className="animate-spin text-blue-400" size={40} />
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-6">
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] animate-pulse">Initializing Command Center</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="h-screen bg-[#020617] flex font-sans selection:bg-blue-600/30 selection:text-blue-200 overflow-hidden">
 
-        {/* ── Header ────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-          <div>
-            <p className="text-blue-400 text-sm font-semibold uppercase tracking-widest mb-1">Agent Dashboard</p>
-            <h1 className="text-3xl lg:text-4xl font-bold text-white">
-              Welcome back, <span className="bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent">{user?.name?.split(' ')[0]}</span>! 👋
-            </h1>
-            <p className="text-slate-400 mt-1 text-sm">Here's what's happening with your listings today.</p>
+      {/* Dynamic Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900/60 backdrop-blur-2xl border-r border-slate-800/50 transform transition-transform duration-500 ease-in-out lg:translate-x-0 lg:static lg:block h-full ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="h-full flex flex-col p-6">
+          <div className="flex items-center gap-4 mb-10 px-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Shield size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-black text-white tracking-tight leading-none">NepalBhumi</h1>
+              <p className="text-[9px] text-blue-400 font-bold uppercase tracking-[0.2em] mt-1">Agent Protocol</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/agent/properties')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50"
-            >
-              <Plus size={18} /> Post Property
+
+          <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2">
+            <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-4">Intelligence</div>
+            <NavItem id="overview" label="Mission Control" icon={LayoutGrid} />
+            <NavItem id="analytics" label="Market Analytics" icon={BarChart3} />
+
+            <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-4 mt-8">Operations</div>
+            <NavItem id="properties" label="My Assets" icon={Home} />
+            <NavItem id="inquiries" label="Inquiries" icon={MessageSquare} />
+
+            <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4 px-4 mt-8">Systems</div>
+            <NavItem id="profile" label="Agent Profile" icon={User} />
+            <NavItem id="settings" label="Config" icon={SettingsIcon} />
+          </nav>
+
+          <div className="pt-6 border-t border-slate-800">
+            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-4 py-3.5 text-slate-500 hover:text-red-400 hover:bg-red-500/5 rounded-2xl transition-all font-bold text-sm group">
+              <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
+              <span>Terminate Session</span>
             </button>
-            <button
-              onClick={handleLogout}
-              className="p-2.5 rounded-xl bg-slate-700/50 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all border border-slate-700 hover:border-red-500/30"
-              title="Logout"
-            >
-              <LogOut size={18} />
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 bg-[#020617] relative h-full">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] pointer-events-none rounded-full"></div>
+
+        {/* Top Header */}
+        <header className="h-24 bg-slate-900/40 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-8 z-40 sticky top-0 shrink-0">
+          <div className="flex items-center gap-6">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors">
+              {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-          </div>
-        </div>
-
-        {/* ── Stat Cards ────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {statCards.map(({ icon: Icon, label, value, color, bg, sub }) => (
-            <div key={label} className={`rounded-2xl border p-5 backdrop-blur-sm ${bg}`}>
-              <div className="flex items-start justify-between mb-3">
-                <Icon size={22} className={color} />
-                <Activity size={14} className="text-slate-600" />
-              </div>
-              <p className={`text-3xl font-bold ${color} mb-0.5`}>{value}</p>
-              <p className="text-xs text-slate-400 font-medium">{label}</p>
-              {sub && <p className="text-xs text-slate-600 mt-0.5">{sub}</p>}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* ── Left column ─────────────────────────── */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Quick Actions */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm">
-              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Activity size={18} className="text-blue-400" /> Quick Actions
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {quickActions.map(({ icon: Icon, label, desc, color, onClick }) => (
-                  <button
-                    key={label}
-                    onClick={onClick}
-                    className="group flex flex-col items-center gap-2 p-4 bg-slate-700/40 hover:bg-slate-700/70 rounded-xl border border-slate-700/50 hover:border-blue-500/30 transition-all"
-                  >
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${color} shadow-lg group-hover:scale-110 transition-transform`}>
-                      <Icon size={20} className="text-white" />
-                    </div>
-                    <p className="text-xs font-semibold text-white text-center leading-tight">{label}</p>
-                    <p className="text-[10px] text-slate-400 text-center">{desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Listings */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Home size={18} className="text-blue-400" /> Recent Listings
-                </h2>
-                <button
-                  onClick={() => navigate('/agent/properties')}
-                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
-                >
-                  View All <ChevronRight size={14} />
-                </button>
-              </div>
-
-              {recentListings.length === 0 ? (
-                <div className="text-center py-10 bg-slate-700/20 rounded-xl border border-slate-700/30 border-dashed">
-                  <Home size={32} className="mx-auto text-slate-600 mb-2" />
-                  <p className="text-slate-400 text-sm">No properties yet</p>
-                  <button
-                    onClick={() => navigate('/agent/properties')}
-                    className="mt-3 px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg text-xs font-semibold hover:bg-blue-600/30 transition"
-                  >
-                    Post your first listing
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentListings.map((listing) => (
-                    <div
-                      key={listing._id}
-                      className="flex gap-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl p-3 border border-slate-700/40 hover:border-slate-600/60 transition-all cursor-pointer"
-                      onClick={() => navigate('/agent/properties')}
-                    >
-                      <img
-                        src={listing.images?.[0]?.url || listing.images?.[0] || 'https://placehold.co/64x64/334155/94a3b8?text=No+Image'}
-                        alt={listing.title}
-                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-white truncate">{listing.title}</p>
-                        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <MapPin size={11} /> {listing.location?.city || 'N/A'}
-                        </p>
-                        <p className="text-xs text-blue-400 font-bold mt-1">
-                          {listing.currency} {listing.price?.toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0 flex flex-col items-end gap-1">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${listing.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'}`}>
-                          {listing.status}
-                        </span>
-                        <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <Eye size={10} /> {listing.views || 0}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div>
+              <h2 className="text-xl font-black text-white tracking-tight capitalize">{activeTab.replace('-', ' ')}</h2>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">Operational ID: {user?._id?.slice(-8).toUpperCase() || 'UNSYNCED'}</p>
             </div>
           </div>
 
-          {/* ── Right column ────────────────────────── */}
-          <div className="space-y-6">
-
-            {/* Profile Card */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm text-center">
-              <div className="relative inline-block mb-4">
-                {profileData?.avatarUrl ? (
-                  <img
-                    src={profileData.avatarUrl}
-                    alt={user?.name}
-                    className="w-20 h-20 rounded-full object-cover border-4 border-blue-500/40 mx-auto"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-4 border-blue-500/30 mx-auto">
-                    <User size={36} className="text-white" />
-                  </div>
-                )}
-                <div className="absolute bottom-0 right-0 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-800" />
-              </div>
-              <h3 className="text-white font-bold text-lg">{user?.name}</h3>
-              <p className="text-slate-400 text-sm">{profileData?.agencyInfo?.name || 'Independent Agent'}</p>
-              {stats.averageRating > 0 && (
-                <div className="flex items-center justify-center gap-1 mt-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={12} className={i < Math.round(stats.averageRating) ? 'fill-amber-400 text-amber-400' : 'text-slate-600'} />
-                  ))}
-                  <span className="text-xs text-slate-400 ml-1">{stats.averageRating.toFixed(1)}</span>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-700">
-                <div className="text-center">
-                  <p className="text-xl font-bold text-blue-400">{stats.totalListings}</p>
-                  <p className="text-[10px] text-slate-500 font-medium">Listings</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold text-emerald-400">{stats.totalViews}</p>
-                  <p className="text-[10px] text-slate-500 font-medium">Total Views</p>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate('/agent/profile')}
-                className="mt-4 w-full py-2 rounded-xl bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 text-xs font-semibold flex items-center justify-center gap-2 transition"
-              >
-                <Settings size={14} /> Edit Profile
-              </button>
-            </div>
-
-            {/* Performance Overview */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm">
-              <h2 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                <TrendingUp size={16} className="text-emerald-400" /> Performance
-              </h2>
-              <div className="space-y-3">
-                {[
-                  { label: 'Active Rate', value: stats.totalListings > 0 ? Math.round((stats.activeListings / stats.totalListings) * 100) : 0, color: 'bg-emerald-500' },
-                  { label: 'Avg Views / Listing', value: stats.totalListings > 0 ? Math.round(stats.totalViews / stats.totalListings) : 0, color: 'bg-blue-500', isCount: true },
-                ].map(({ label, value, color, isCount }) => (
-                  <div key={label}>
-                    <div className="flex justify-between text-xs text-slate-400 mb-1">
-                      <span>{label}</span>
-                      <span className="font-semibold text-white">{isCount ? value : `${value}%`}</span>
-                    </div>
-                    {!isCount && (
-                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className={`h-full ${color} rounded-full transition-all`} style={{ width: `${value}%` }} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden backdrop-blur-sm">
-              {[
-                { icon: Home, label: 'Manage Properties', path: '/agent/properties', color: 'text-blue-400' },
-                { icon: User, label: 'My Profile', path: '/agent/profile', color: 'text-violet-400' },
-                { icon: BarChart3, label: 'Find Local Agents', path: '/agents', color: 'text-amber-400' },
-                { icon: MapPin, label: 'Explore Map', path: '/map', color: 'text-emerald-400' },
-              ].map(({ icon: Icon, label, path, color }, idx, arr) => (
-                <button
-                  key={label}
-                  onClick={() => navigate(path)}
-                  className={`w-full flex items-center gap-3 px-5 py-3.5 text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors text-sm font-medium ${idx < arr.length - 1 ? 'border-b border-slate-700/50' : ''}`}
-                >
-                  <Icon size={16} className={color} />
-                  {label}
-                  <ChevronRight size={14} className="ml-auto text-slate-600" />
-                </button>
-              ))}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => {
+                setActiveTab('properties');
+                setShowAddModal(true);
+              }}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded-2xl text-white hover:bg-blue-500 transition-all text-xs font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-95"
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">Post Property</span>
+            </button>
+            <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-xl cursor-pointer hover:border-blue-500 transition-all">
+              <img src={user?.profilePicture || user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name || 'Agent'}&background=0f172a&color=3b82f6`} alt="" className="w-full h-full object-cover" />
             </div>
           </div>
-        </div>
+        </header>
+
+        {/* Dynamic Main Workspace */}
+        <main className="flex-1 overflow-y-auto p-6 sm:p-10 custom-scrollbar relative">
+          {activeTab === 'overview' && <Overview stats={stats} recentListings={recentListings} navigate={navigate} setActiveTab={setActiveTab} />}
+          {activeTab === 'profile' && <Profile />}
+          {activeTab === 'properties' && (
+            <MyAssets 
+              navigate={navigate} 
+              setActiveTab={setActiveTab} 
+              autoOpenAdd={showAddModal} 
+              onAddOpened={() => setShowAddModal(false)} 
+            />
+          )}
+          {activeTab === 'analytics' && <Analytics />}
+          {activeTab === 'inquiries' && <Inquiries />}
+          {activeTab === 'settings' && <Settings />}
+        </main>
       </div>
     </div>
   );

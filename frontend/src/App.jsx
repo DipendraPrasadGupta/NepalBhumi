@@ -14,7 +14,7 @@ import UserProfile from './pages/UserProfile';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminProperties from './pages/Admin/Properties/AdminProperties';
 import Agents from './pages/Agents';
-import AgentProfile from './pages/Agent/AgentProfile';
+import AgentProfile from './pages/Agent/Profile/Profile';
 import AgentPropertyDashboard from './pages/Agent/AgentPropertyDashboard';
 import AgentDashboard from './pages/Agent/AgentDashboard';
 import NotFound from './pages/NotFound';

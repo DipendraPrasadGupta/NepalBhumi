@@ -67,7 +67,7 @@ function Login() {
         if (user?.role === 'admin') {
           navigate('/admin');
         } else if (user?.role === 'agent') {
-          navigate('/agent/profile');
+          navigate('/agent/dashboard');
         } else {
           navigate('/user-dashboard');
         }

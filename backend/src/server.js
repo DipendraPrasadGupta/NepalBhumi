@@ -1,4 +1,4 @@
-import './config/env.js';
+import './config/env.js'; // Model Sync Trigger
 import app from './app.js';
 import connectDB from './config/database.js';
 import { initializeCloudinary } from './config/cloudinary.js';

@@ -400,7 +400,7 @@ const AgentPropertyDashboard = () => {
         <div className="flex items-center justify-between mb-8 gap-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/agent/profile')}
+              onClick={() => navigate('/agent/dashboard')}
               className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-300 hover:text-white"
             >
               <ArrowLeft size={24} />

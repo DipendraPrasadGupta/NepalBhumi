@@ -102,26 +102,9 @@ const propertySchema = new mongoose.Schema(
       floor: String,
       facing: String,
       totalFloors: String,
+      highlights: [String],
     },
-    amenities: [
-      {
-        type: String,
-        enum: [
-          'parking',
-          'security',
-          'garden',
-          'gym',
-          'pool',
-          'balcony',
-          'kitchen',
-          'dining',
-          'laundry',
-          'elevator',
-          'wifi',
-          'water-supply',
-        ],
-      },
-    ],
+    amenities: [String],
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

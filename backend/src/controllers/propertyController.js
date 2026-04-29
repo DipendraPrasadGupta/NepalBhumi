@@ -7,6 +7,8 @@ export const createProperty = async (req, res) => {
   try {
     const { title, description, type, purpose, price, currency, location, features, amenities } =
       req.body;
+    
+    console.log('DEBUG: amenities received:', amenities);
 
     if (!title || !description || !type || !purpose || !price) {
       return res.status(400).json({ message: 'Please provide all required fields' });
@@ -40,6 +42,11 @@ export const createProperty = async (req, res) => {
       price,
       currency: currency || 'NPR',
       location: {
+        province: parsedLocation.province || '',
+        district: parsedLocation.district || '',
+        municipality: parsedLocation.municipality || '',
+        ward: parsedLocation.ward || '',
+        streetTole: parsedLocation.streetTole || '',
         address: parsedLocation.address || '',
         city: parsedLocation.city || 'Kathmandu',
         state: parsedLocation.state || '',
@@ -51,7 +58,10 @@ export const createProperty = async (req, res) => {
           coordinates: coordinates,
         },
       },
-      features: parsedFeatures,
+      features: {
+        ...parsedFeatures,
+        highlights: parsedFeatures.highlights || []
+      },
       amenities: parsedAmenities,
       images,
       ownerId: req.user.userId,
