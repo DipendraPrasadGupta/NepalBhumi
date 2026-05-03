@@ -117,7 +117,7 @@ const SavedAgents = () => {
               </div>
 
               <Link 
-                to={`/agents/${agent._id}`}
+                to={`/agent/${agent._id}`}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600/10 hover:bg-blue-600 text-blue-500 hover:text-white rounded-xl font-black text-[10px] uppercase tracking-widest transition-all group/btn"
               >
                 Access Dossier <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />

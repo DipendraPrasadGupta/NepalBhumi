@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { propertyAPI } from '../api/endpoints.js';
 import { formatPrice } from '../utils/formatters.js';
@@ -10,8 +10,8 @@ import { useAuthStore } from '../store.js';
 const AgentDetailsModal = ({ agent, onClose }) => {
   if (!agent) return null;
 
-  // Generate QR code data - links to agent contact
-  const qrData = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Phone:${agent.phone}|Email:${agent.name}`;
+  // Generate QR code data - links to agent public profile
+  const qrData = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.origin + '/agent/' + agent._id)}`;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -97,10 +97,24 @@ const AgentDetailsModal = ({ agent, onClose }) => {
               <Phone size={18} />
               Call
             </a>
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg transition flex items-center justify-center gap-2">
+            <a 
+              href={`https://wa.me/${agent.socialLinks?.whatsapp || agent.phone?.replace(/[^0-9]/g, '') || '9800000000'}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition flex items-center justify-center gap-2"
+            >
               <MessageSquare size={18} />
-              Message
-            </button>
+              WhatsApp
+            </a>
+          </div>
+          <div className="pt-2">
+            <Link 
+              to={`/agent/${agent._id}`}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg transition flex items-center justify-center gap-2"
+            >
+              <User size={18} />
+              View Full Agent Details
+            </Link>
           </div>
         </div>
       </div>
@@ -548,7 +562,7 @@ function PropertyDetails() {
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition flex items-center justify-center gap-2"
                 >
                   <Info size={20} />
-                  View All Details
+                  Contact Agent
                 </button>
               </div>
             </div>
