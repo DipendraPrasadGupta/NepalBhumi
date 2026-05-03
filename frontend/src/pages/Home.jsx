@@ -3,6 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Heart, Search as SearchIcon, Bed, Bath, Square, Zap, CheckCircle, TrendingUp, ShieldCheck, MessageSquare, PlusCircle, Settings, Map, Home as HomeIcon, Key, DollarSign, Building2, ClipboardCheck, Users, Star, CheckCircle2, ChevronDown, HelpCircle, ArrowRight, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { propertyAPI } from '../api/endpoints.js';
 import PropertyCard from '../components/PropertyCard.jsx';
+import kathmanduImg from '../assets/images/kathmandu.webp';
+import pokharaImg from '../assets/images/pokhara.jpeg';
+import lalitpurImg from '../assets/images/Lalitpur.jpeg';
+import bhaktapurImg from '../assets/images/Bhaktapur.jpg';
+import chitwanImg from '../assets/images/chitwan.jpg';
+import lumbiniImg from '../assets/images/lumbini.webp';
 
 function Home() {
   const navigate = useNavigate();
@@ -142,6 +148,39 @@ function Home() {
       iconColor: 'text-pink-600',
       glowColor: 'bg-pink-400/20',
       path: '/map'
+    }
+  ];
+
+  const popularLocations = [
+    {
+      name: 'Kathmandu',
+      properties: '2,400+',
+      image: kathmanduImg
+    },
+    {
+      name: 'Pokhara',
+      properties: '1,200+',
+      image: pokharaImg
+    },
+    {
+      name: 'Lalitpur',
+      properties: '850+',
+      image: lalitpurImg
+    },
+    {
+      name: 'Bhaktapur',
+      properties: '600+',
+      image: bhaktapurImg
+    },
+    {
+      name: 'Chitwan',
+      properties: '450+',
+      image: chitwanImg
+    },
+    {
+      name: 'Lumbini',
+      properties: '300+',
+      image: lumbiniImg
     }
   ];
 
@@ -741,6 +780,76 @@ function Home() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Popular Locations Section */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        {/* Decorative Background Patterns */}
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/50 via-white to-white pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-50/40 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-50 text-blue-600 rounded-full mb-6 font-bold text-sm tracking-wide border border-blue-100 shadow-sm animate-pulse-slow">
+              <MapPin size={18} className="text-blue-500" /> Explore Nepal
+            </div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 mb-6 tracking-tight">
+              Popular <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Locations</span>
+            </h2>
+            <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
+              Find premium properties in Nepal's most sought-after cities and neighborhoods
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {popularLocations.map((loc, idx) => (
+              <div 
+                key={idx} 
+                className={`group relative rounded-[2rem] overflow-hidden cursor-pointer ${idx === 0 || idx === 3 ? 'md:col-span-2 lg:col-span-2' : ''} h-[320px] shadow-lg hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all duration-500`}
+                onClick={() => handlePopularSearch(loc.name)}
+              >
+                {/* Image Background */}
+                <div className="absolute inset-0 bg-slate-900">
+                  <img 
+                    src={loc.image} 
+                    alt={loc.name} 
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"
+                  />
+                </div>
+
+                {/* Gradient Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 p-8 w-full flex flex-col justify-end h-full">
+                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                    <h3 className="text-3xl md:text-4xl font-black text-white mb-2 drop-shadow-md">
+                      {loc.name}
+                    </h3>
+                    <div className="flex items-center justify-between text-white/90">
+                      <span className="font-semibold text-lg flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 shadow-sm">
+                        {loc.properties} Properties
+                      </span>
+                      <div className="w-12 h-12 rounded-full bg-primary/90 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-4 group-hover:translate-x-0 transition-all duration-500 ease-out shadow-lg hover:bg-blue-600">
+                        <ArrowRight className="text-white" size={24} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center mt-12">
+            <Link to="/map" className="inline-flex items-center gap-2 text-primary font-bold hover:text-blue-600 transition-colors group">
+              Explore All Locations
+              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
         </div>
       </section>
