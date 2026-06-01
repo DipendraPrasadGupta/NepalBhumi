@@ -56,8 +56,10 @@ const MyAssets = ({ navigate, setActiveTab, autoOpenAdd, onAddOpened }) => {
     setLoading(true);
     try {
       const data = new FormData();
-      ['title', 'description', 'type', 'purpose', 'price', 'currency'].forEach(key => {
-        data.append(key, formData[key]);
+      ['title', 'description', 'type', 'purpose', 'price', 'currency', 'status', 'videoUrl'].forEach(key => {
+        if (formData[key] !== undefined) {
+          data.append(key, formData[key]);
+        }
       });
       
       data.append('location', JSON.stringify(formData.location));
@@ -95,6 +97,16 @@ const MyAssets = ({ navigate, setActiveTab, autoOpenAdd, onAddOpened }) => {
       } catch (error) {
         console.error('Termination failed:', error);
       }
+    }
+  };
+
+  const handleStatusChange = async (propertyId, newStatus) => {
+    try {
+      await propertyAPI.updateProperty(propertyId, { status: newStatus });
+      fetchProperties(currentPage);
+    } catch (error) {
+      console.error('Status update failed:', error);
+      alert('Failed to update status');
     }
   };
 
@@ -210,12 +222,22 @@ const MyAssets = ({ navigate, setActiveTab, autoOpenAdd, onAddOpened }) => {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm ${
-                          prop.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${prop.status === 'active' ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`}></div>
-                          {prop.status}
-                        </span>
+                        <select
+                          value={prop.status}
+                          onChange={(e) => handleStatusChange(prop._id, e.target.value)}
+                          className={`appearance-none pl-3 pr-6 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border shadow-sm cursor-pointer outline-none transition-all ${
+                            prop.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20' : 
+                            prop.status === 'pending' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20' :
+                            prop.status === 'sold' || prop.status === 'rented' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20' :
+                            'bg-slate-500/10 text-slate-400 border-slate-500/20 hover:bg-slate-500/20'
+                          }`}
+                        >
+                          <option value="active" className="bg-slate-900 text-emerald-400">Active</option>
+                          <option value="pending" className="bg-slate-900 text-amber-400">Pending</option>
+                          <option value="archived" className="bg-slate-900 text-slate-400">Archived</option>
+                          <option value="sold" className="bg-slate-900 text-blue-400">Sold</option>
+                          <option value="rented" className="bg-slate-900 text-blue-400">Rented</option>
+                        </select>
                       </td>
                       <td className="px-8 py-6 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">

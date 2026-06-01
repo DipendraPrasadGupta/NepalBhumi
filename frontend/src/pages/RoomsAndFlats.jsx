@@ -16,7 +16,7 @@ function RoomsAndFlats() {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || searchParams.get('city') || '');
   const [sortBy, setSortBy] = useState('newest');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
@@ -34,7 +34,7 @@ function RoomsAndFlats() {
   // Rooms/Flats filters
   const [roomFilters, setRoomFilters] = useState({
     type: searchParams.get('type') || '',
-    location: searchParams.get('search') || '', // Use 'search' param as location
+    location: searchParams.get('search') || searchParams.get('city') || '', // Use 'search' or 'city' param as location
     priceRange: parsePriceRange(searchParams.get('priceRange')),
   });
 

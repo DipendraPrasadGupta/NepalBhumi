@@ -24,6 +24,7 @@ const PropertyForm = ({ initialData, onSubmit, onCancel, loading, mode = 'create
     description: initialData?.description || '',
     type: initialData?.type || 'flat',
     purpose: initialData?.purpose || 'rent',
+    status: initialData?.status || 'pending',
     price: initialData?.price || '',
     currency: initialData?.currency || 'NPR',
     location: {
@@ -50,11 +51,20 @@ const PropertyForm = ({ initialData, onSubmit, onCancel, loading, mode = 'create
       builtYear: initialData?.features?.builtYear || new Date().getFullYear(),
       highlights: initialData?.features?.highlights || []
     },
-    amenities: initialData?.amenities || []
+    amenities: initialData?.amenities || [],
+    videoUrl: initialData?.videoUrl || ''
   });
 
   const [selectedImages, setSelectedImages] = useState([]);
-  const [previews, setPreviews] = useState(initialData?.images?.map(img => img.url) || []);
+  const [previews, setPreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState(initialData?.images || []);
+
+  useEffect(() => {
+    if (initialData?.images) {
+      setExistingImages(initialData.images);
+      setPreviews(initialData.images.map(img => img.url));
+    }
+  }, [initialData]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -76,18 +86,40 @@ const PropertyForm = ({ initialData, onSubmit, onCancel, loading, mode = 'create
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    const validFiles = files.filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024);
-    setSelectedImages([...selectedImages, ...validFiles]);
-    validFiles.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreviews(prev => [...prev, e.target.result]);
-      reader.readAsDataURL(file);
-    });
+    const remainingSlots = 10 - (existingImages.length + selectedImages.length);
+    
+    if (remainingSlots <= 0) {
+      alert('Maximum limit of 10 images reached.');
+      return;
+    }
+
+    const validFiles = files
+      .filter(f => f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024)
+      .slice(0, remainingSlots);
+
+    if (validFiles.length < files.length && files.length > 0) {
+      alert(`Only the first ${validFiles.length} valid images were added (Max 10 total).`);
+    }
+
+    if (validFiles.length > 0) {
+      setSelectedImages(prev => [...prev, ...validFiles]);
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => setPreviews(prev => [...prev, e.target.result]);
+        reader.readAsDataURL(file);
+      });
+    }
   };
 
   const removeImage = (index) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
-    setPreviews(prev => prev.filter((_, i) => i !== index));
+    if (index < existingImages.length) {
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+      setPreviews(prev => prev.filter((_, i) => i !== index));
+    } else {
+      const relativeIndex = index - existingImages.length;
+      setSelectedImages(prev => prev.filter((_, i) => i !== relativeIndex));
+      setPreviews(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const nextStep = () => setStep(s => Math.min(s + 1, 5));
@@ -285,7 +317,28 @@ const PropertyForm = ({ initialData, onSubmit, onCancel, loading, mode = 'create
                   </div>
                 </div>
               </div>
-              <div className="space-y-2">
+              
+              {mode === 'edit' && (
+                <div className="space-y-2 mt-6">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Asset Status</label>
+                  <div className="relative" id="status-dropdown-container">
+                    <select 
+                      value={formData.status}
+                      onChange={(e) => setFormData({...formData, status: e.target.value})}
+                      className="w-full px-5 py-4 bg-slate-900/50 border border-slate-800 rounded-xl text-white font-bold text-sm outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="pending" className="bg-slate-900 text-amber-400">Pending</option>
+                      <option value="active" className="bg-slate-900 text-emerald-400">Active</option>
+                      <option value="archived" className="bg-slate-900 text-slate-400">Archived</option>
+                      <option value="sold" className="bg-slate-900 text-blue-400">Sold</option>
+                      <option value="rented" className="bg-slate-900 text-blue-400">Rented</option>
+                    </select>
+                    <Activity size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2 mt-6">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Valuation (NPR)</label>
                 <div className="relative group">
                   <div className="absolute left-6 top-1/2 -translate-y-1/2 text-blue-500 font-black text-sm group-focus-within:scale-110 transition-transform">NPR</div>
@@ -555,6 +608,29 @@ const PropertyForm = ({ initialData, onSubmit, onCancel, loading, mode = 'create
                   </button>
                 </div>
               ))}
+            </div>
+
+            {/* Property Video Input */}
+            <div className="mt-12 p-8 bg-slate-900/40 rounded-[2.5rem] border border-white/5 backdrop-blur-3xl">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 bg-red-500/10 text-red-500 rounded-2xl">
+                  <Eye size={24} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-black uppercase tracking-widest text-white">Property Video Tour</h4>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.1em]">Paste link from YouTube, Facebook or TikTok</p>
+                </div>
+              </div>
+              
+              <div className="relative group">
+                <input 
+                  type="text" 
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={formData.videoUrl}
+                  onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                  className="w-full pl-6 pr-6 py-4 bg-slate-950/40 border border-slate-800 rounded-2xl text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-red-500/20 transition-all"
+                />
+              </div>
             </div>
           </div>
         )}

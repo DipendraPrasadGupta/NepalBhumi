@@ -5,61 +5,100 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // OpenStreetMap Component (Free, No API Key Required)
-const MapComponent = ({ lat, lng, title, price }) => {
-  // Validate coordinates
-  const validLat = lat && !isNaN(lat) ? parseFloat(lat) : 27.7172;
-  const validLng = lng && !isNaN(lng) ? parseFloat(lng) : 85.3240;
+const MapComponent = ({ lat, lng, title, price, property }) => {
+  // Logic to determine if coordinates are the default Kathmandu center (approx)
+  const isDefaultCoord = (lat && lng) && (
+    Math.abs(lat - 27.7172) < 0.001 && 
+    Math.abs(lng - 85.3240) < 0.001
+  );
 
-  console.log(`[MapComponent] Rendering map for "${title}":`, { lat: validLat, lng: validLng });
+  let mapQuery = "";
+  if (lat && lng && !isDefaultCoord) {
+    mapQuery = `${lat},${lng}`;
+  } else {
+    // Construct a high-precision search string using deep metadata
+    const parts = [
+      property?.location?.address || property?.location,
+      property?.streetTole,
+      property?.landmark,
+      property?.city,
+      'Nepal'
+    ].filter(part => part && typeof part === 'string' && part.trim() !== "");
+    
+    mapQuery = parts.join(", ");
+  }
 
-  // Using OpenStreetMap + Leaflet (FREE, no API key required)
-  // Zoom levels: 18 = street level, 15 = neighborhood
-  const osmUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${(validLng - 0.01).toFixed(6)},${(validLat - 0.01).toFixed(6)},${(validLng + 0.01).toFixed(6)},${(validLat + 0.01).toFixed(6)}&layer=mapnik&marker=${validLat.toFixed(6)},${validLng.toFixed(6)}`;
+  // High zoom (z=18) and satellite-hybrid view (t=h) for 'perfect' pinpointing
+  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=h&z=18&ie=UTF8&iwloc=&output=embed`;
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden shadow-lg border-2 border-slate-200 bg-slate-100 flex flex-col">
-      {/* Map Content */}
-      <div className="flex-1 relative bg-slate-200">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-900 flex flex-col group">
+      {/* Real Map Layer */}
+      <div className="flex-1 relative bg-slate-900">
         <iframe
-          key={`map-${validLat}-${validLng}`}
+          key={`map-${lat}-${lng}-${mapQuery}`}
           width="100%"
           height="100%"
-          style={{ border: 0, minHeight: '400px' }}
+          style={{ border: 0, minHeight: '400px', filter: 'contrast(1.1) brightness(0.9)' }}
           allowFullScreen=""
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={osmUrl}
+          src={mapUrl}
           title={`Map: ${title}`}
-          className="rounded-xl absolute inset-0 bg-slate-100"
-          onError={() => {
-            console.error('[MapComponent] Failed to load map iframe');
-          }}
-          onLoad={() => {
-            console.log('[MapComponent] Map iframe loaded successfully');
-          }}
+          className="rounded-xl absolute inset-0 bg-slate-900 transition-all duration-1000 group-hover:brightness-100"
         />
-        {/* Fallback text while loading - using link instead of broken map */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 pointer-events-none">
-          <div className="text-center">
-            <p className="text-slate-400 text-sm font-medium">Loading map...</p>
+        
+        {/* Digital Crosshair Overlay - The 'Highlight' */}
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+          <div className="absolute w-full h-[1px] bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.2)]"></div>
+          <div className="absolute w-[1px] h-full bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.2)]"></div>
+          
+          {/* Central Targeting Pulse & Pin */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-16 h-16 border border-blue-500/30 rounded-full animate-ping absolute"></div>
+            
+            {/* Elite Location Pin with Price Badge */}
+            <div className="relative z-20 flex flex-col items-center animate-bounce duration-[2000ms]">
+              <div className="flex items-center bg-blue-600 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.8)] border-2 border-white px-3 py-1.5 gap-2">
+                <MapPin size={18} className="text-white fill-white/20" />
+                <span className="text-[11px] font-black text-white whitespace-nowrap pr-1">
+                  {price.toLocaleString()}
+                </span>
+              </div>
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1 shadow-lg shadow-blue-500/50"></div>
+            </div>
           </div>
+
+          {/* Decorative Corner Brackets */}
+          <div className="absolute top-6 left-6 w-6 h-6 border-t border-l border-blue-500/20"></div>
+          <div className="absolute top-6 right-6 w-6 h-6 border-t border-r border-blue-500/20"></div>
+          <div className="absolute bottom-6 left-6 w-6 h-6 border-b border-l border-blue-500/20"></div>
+          <div className="absolute bottom-6 right-6 w-6 h-6 border-b border-r border-blue-500/20"></div>
+        </div>
+
+        {/* Dynamic Coordinates Readout */}
+        <div className="absolute top-4 left-4 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-blue-500/30 text-[8px] font-mono text-blue-400 uppercase tracking-widest z-20 animate-pulse">
+          Target Locked // {lat?.toFixed(4) || 'ADDR'}:{lng?.toFixed(4) || 'LOC'}
         </div>
       </div>
 
       {/* Property Info Overlay */}
-      <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-lg shadow-xl p-4 z-10 border border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="flex justify-between items-start">
+      <div className="absolute bottom-4 left-4 right-4 bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl p-5 z-20 border border-blue-500/30 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        <div className="flex justify-between items-center">
           <div className="flex-1">
-            <p className="text-sm font-bold text-slate-900 line-clamp-1 mb-1">{title}</p>
-            <p className="text-lg font-bold text-blue-600">{price}</p>
+            <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Geographic Intelligence</p>
+            <h4 className="text-base font-black text-white truncate mb-1">{title}</h4>
+            <p className="text-lg font-black text-white">
+              {price.toLocaleString()} <span className="text-[10px] font-bold text-slate-400 uppercase">NPR</span>
+            </p>
           </div>
-          <div className="bg-blue-600 p-2 rounded-lg text-white shadow-md">
-            <MapPin size={18} />
-          </div>
+          <Link 
+            to={`/property/${property?.id || property?._id}`}
+            className="bg-blue-600 p-3 rounded-xl text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all group"
+          >
+            <ExternalLink size={20} className="group-hover:scale-110 transition-transform" />
+          </Link>
         </div>
-        <p className="text-[10px] text-slate-500 mt-2 font-mono bg-slate-50 p-1 rounded inline-block">
-          {validLat.toFixed(6)}, {validLng.toFixed(6)}
-        </p>
       </div>
     </div>
   );
@@ -68,7 +107,7 @@ const MapComponent = ({ lat, lng, title, price }) => {
 const PropertyMap = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const urlLocation = searchParams.get('search') || '';
+  const urlLocation = searchParams.get('search') || searchParams.get('city') || '';
   const urlType = searchParams.get('type') || '';
   const urlPriceRange = searchParams.get('priceRange') || '';
 
@@ -84,26 +123,31 @@ const PropertyMap = () => {
 
   // Map backend types (lowercase, hyphenated) to display types
   const typeMapping = {
+    'house': 'House',
+    'flat': 'Flat',
     'apartment': 'Apartment',
     'single-family': 'Single Family',
     'multi-family': 'Multi Family',
     'studio': 'Studio',
     'penthouse': 'Penthouse',
+    'single-room': 'Single Room',
+    'sharing-room': 'Sharing Room',
+    '1bhk': '1 BHK',
+    '2bhk': '2 BHK',
+    '3bhk': '3 BHK',
+    'commercial-building': 'Commercial Building',
     'office-space': 'Office Space',
     'store-front': 'Store Front',
-    'warehouse': 'Warehouse',
-    'workshop': 'Workshop',
     'food-services': 'Food Services',
     'guest-services': 'Guest Services',
     'medical-services': 'Medical Services',
     'mixed-commercial': 'Mixed Commercial',
-    'agricultural': 'Agricultural',
-    'residential': 'Residential',
-    'commercial': 'Commercial',
-    'industrial': 'Industrial',
-    'mixed-use': 'Mixed Use',
-    'house': 'House',
+    'industrial-site': 'Industrial Site',
+    'warehouse': 'Warehouse',
+    'workshop': 'Workshop',
     'land': 'Land',
+    'agricultural': 'Agricultural',
+    'mixed-use': 'Mixed Use',
   };
 
   const [properties, setProperties] = useState([]);
@@ -142,92 +186,86 @@ const PropertyMap = () => {
 
   // Location to coordinates mapping for Nepal
   const locationCoordinates = {
-    // KATHMANDU VALLEY - MAIN KATHMANDU AREAS
+    // KATHMANDU VALLEY - CORE AREAS
     'kathmandu': { lat: 27.7172, lng: 85.3240 },
-    'durbar marg': { lat: 27.7314, lng: 85.3159 },
-    'deep jyoti marg': { lat: 27.7195, lng: 85.3240 },
-    'chakrapath': { lat: 27.7209, lng: 85.3270 },
-    'thamel': { lat: 27.7245, lng: 85.2928 },
-    'new road': { lat: 27.7142, lng: 85.3239 },
-    'basundhara': { lat: 27.7418, lng: 85.3458 },
-
-    // KATHMANDU - NORTH AREAS
-    'high garden': { lat: 27.7350, lng: 85.3310 },
-    'baluwater': { lat: 27.7255, lng: 85.3400 },
-    'kapan': { lat: 27.7500, lng: 85.3150 },
-    'maharajgunj': { lat: 27.7400, lng: 85.3250 },
-    'naxal': { lat: 27.7350, lng: 85.3200 },
-    'lazimpat': { lat: 27.7210, lng: 85.3290 },
-    'mahankal': { lat: 27.7400, lng: 85.3350 },
-
-    // KATHMANDU - CENTRAL AREAS
-    'kamalpokhari': { lat: 27.7230, lng: 85.3310 },
-    'sundhara': { lat: 27.7120, lng: 85.3180 },
-    'putalisadak': { lat: 27.7089, lng: 85.3239 },
-    'jhamsikhel': { lat: 27.7168, lng: 85.3168 },
-    'maitidevi': { lat: 27.7200, lng: 85.3200 },
-    'dhumbarahi': { lat: 27.7250, lng: 85.3350 },
-
-    // KATHMANDU - EAST AREAS
-    'boudha': { lat: 27.7196, lng: 85.3567 },
-    'gaushala': { lat: 27.7300, lng: 85.3500 },
-    'bhimsenkhan': { lat: 27.7300, lng: 85.3200 },
-
-    // KATHMANDU - SOUTH AREAS
-    'godavari': { lat: 27.6200, lng: 85.3800 },
-    'imadol': { lat: 27.6820, lng: 85.2880 },
-
-    // KATHMANDU - WEST AREAS
-    'sitapaila': { lat: 27.7300, lng: 85.2800 },
-    'winayek': { lat: 27.7100, lng: 85.3100 },
-    'paknajol': { lat: 27.7270, lng: 85.2950 },
-
-    // KATHMANDU - LANDMARKS & ZONES
-    'durbar square': { lat: 27.7314, lng: 85.3159 },
-    'kathmandu-city': { lat: 27.7172, lng: 85.3240 },
-    'kathmandu valley': { lat: 27.7172, lng: 85.3240 },
-    'valley': { lat: 27.7172, lng: 85.3240 },
-
-    // BANESHWOR AREA
-    'new baneshwor': { lat: 27.7000, lng: 85.3400 },
-    'naya baneshwor': { lat: 27.7050, lng: 85.3380 },
-    'baneshwor': { lat: 27.6900, lng: 85.3400 },
-
-    // BHAKTAPUR DISTRICT
-    'bhaktapur': { lat: 27.6728, lng: 85.4300 },
-    'sanothimi': { lat: 27.6680, lng: 85.4350 },
-    'bhaktapur district': { lat: 27.6728, lng: 85.4300 },
+    'thamel': { lat: 27.7154, lng: 85.3123 },
+    'durbar marg': { lat: 27.7107, lng: 85.3160 },
+    'new road': { lat: 27.7042, lng: 85.3106 },
+    'lazimpat': { lat: 27.7214, lng: 85.3195 },
+    'baluwatar': { lat: 27.7262, lng: 85.3302 },
+    'naxal': { lat: 27.7148, lng: 85.3284 },
+    'maharajgunj': { lat: 27.7391, lng: 85.3344 },
+    'new baneshwor': { lat: 27.6915, lng: 85.3420 },
+    'old baneshwor': { lat: 27.6976, lng: 85.3421 },
+    'koteshwor': { lat: 27.6766, lng: 85.3486 },
+    'tinkune': { lat: 27.6841, lng: 85.3463 },
+    'gaushala': { lat: 27.7088, lng: 85.3486 },
+    'boudha': { lat: 27.7215, lng: 85.3620 },
+    'chabahil': { lat: 27.7170, lng: 85.3503 },
+    'kapan': { lat: 27.7408, lng: 85.3610 },
+    'basundhara': { lat: 27.7404, lng: 85.3241 },
+    'kalanki': { lat: 27.6938, lng: 85.2817 },
+    'kuleshwor': { lat: 27.6908, lng: 85.2982 },
+    'balkhu': { lat: 27.6805, lng: 85.2936 },
+    'shantinagar': { lat: 27.6865, lng: 85.3475 },
+    'sinamangal': { lat: 27.6953, lng: 85.3541 },
 
     // LALITPUR (PATAN)
-    'patan': { lat: 27.6413, lng: 85.3157 },
-    'lalitpur': { lat: 27.6413, lng: 85.3157 },
+    'lalitpur': { lat: 27.6644, lng: 85.3188 },
+    'patan': { lat: 27.6710, lng: 85.3240 },
+    'pulchowk': { lat: 27.6775, lng: 85.3175 },
+    'jawalakhel': { lat: 27.6738, lng: 85.3120 },
+    'jhamsikhel': { lat: 27.6792, lng: 85.3101 },
+    'kumaripati': { lat: 27.6698, lng: 85.3179 },
+    'satdobato': { lat: 27.6534, lng: 85.3288 },
+    'dhapakhel': { lat: 27.6366, lng: 85.3309 },
+    'bhaisepati': { lat: 27.6417, lng: 85.2981 },
+    'imadol': { lat: 27.6626, lng: 85.3470 },
+    'lubhu': { lat: 27.6481, lng: 85.3729 },
 
-    // POKHARA REGION
+    // BHAKTAPUR
+    'bhaktapur': { lat: 27.6710, lng: 85.4298 },
+    'suryabinayak': { lat: 27.6646, lng: 85.4257 },
+    'thimi': { lat: 27.6776, lng: 85.3888 },
+    'sallaghari': { lat: 27.6736, lng: 85.4053 },
+    'lokanthali': { lat: 27.6749, lng: 85.3672 },
+
+    // POKHARA
     'pokhara': { lat: 28.2096, lng: 83.9856 },
-    'daman': { lat: 27.5897, lng: 85.2245 },
+    'lakeside': { lat: 28.2120, lng: 83.9580 },
+    'mahendrapul': { lat: 28.2255, lng: 83.9899 },
+    'prithvi chowk': { lat: 28.2091, lng: 83.9915 },
+    'birauta': { lat: 28.1883, lng: 83.9712 },
+    'lamachaur': { lat: 28.2561, lng: 83.9772 },
 
-    // WESTERN NEPAL
-    'butwal': { lat: 27.8099, lng: 83.4621 },
-    'lumbini': { lat: 27.5041, lng: 83.2753 },
-    'rara': { lat: 29.3833, lng: 82.0833 },
+    // BUTWAL & LUMBINI
+    'butwal': { lat: 27.7006, lng: 83.4484 },
+    'milanchowk': { lat: 27.6895, lng: 83.4502 },
+    'bhairahawa': { lat: 27.5052, lng: 83.4411 },
+    'lumbini': { lat: 27.4834, lng: 83.2737 },
 
-    // CENTRAL NEPAL
-    'hetauda': { lat: 27.4188, lng: 85.0367 },
-    'dhulikhel': { lat: 27.6172, lng: 85.4189 },
+    // CHITWAN
+    'bharatpur': { lat: 27.6826, lng: 84.4316 },
+    'narayangarh': { lat: 27.7000, lng: 84.4251 },
+    'sauraha': { lat: 27.5810, lng: 84.4925 },
+    'tandi': { lat: 27.6167, lng: 84.5167 },
 
-    // EASTERN NEPAL
-    'birgunj': { lat: 27.1806, lng: 84.8750 },
-    'janakpur': { lat: 26.7520, lng: 85.9243 },
-
-    // FAR EASTERN NEPAL
-    'itahari': { lat: 26.9639, lng: 87.2763 },
-    'biratnagar': { lat: 26.4532, lng: 87.2717 },
+    // OTHER MAJOR CITIES
+    'biratnagar': { lat: 26.4525, lng: 87.2718 },
+    'itahari': { lat: 26.6647, lng: 87.2718 },
     'dharan': { lat: 26.8122, lng: 87.2847 },
-    'ilam': { lat: 26.9158, lng: 87.9264 },
-
-    // FAR WESTERN NEPAL
-    'nepalganj': { lat: 28.0505, lng: 81.0992 },
-    'dhanusha': { lat: 26.8197, lng: 85.9243 },
+    'birgunj': { lat: 27.0125, lng: 84.8775 },
+    'hetauda': { lat: 27.4259, lng: 85.0298 },
+    'nepalganj': { lat: 28.0553, lng: 81.6173 },
+    'dhangadhi': { lat: 28.6850, lng: 80.6089 },
+    'janakpur': { lat: 26.7271, lng: 85.9242 },
+    'damak': { lat: 26.6666, lng: 87.6888 },
+    'birtamode': { lat: 26.6432, lng: 87.9892 },
+    'surkhet': { lat: 28.5996, lng: 81.6355 },
+    'tulsipur': { lat: 28.1296, lng: 82.2970 },
+    'ghorahi': { lat: 28.0315, lng: 82.4851 },
+    'banepa': { lat: 27.6298, lng: 85.5214 },
+    'dhulikhel': { lat: 27.6172, lng: 85.5419 },
   };
 
   const getCoordinatesFromLocation = (location, learnedCoordinates = {}) => {
@@ -307,27 +345,32 @@ const PropertyMap = () => {
   };
 
   const propertyTypes = [
-    { name: 'All', icon: '🏠' },
+    { name: 'All', icon: '🌍' },
+    { name: 'House', icon: '🏠' },
+    { name: 'Flat', icon: '🏢' },
     { name: 'Apartment', icon: '🏢' },
     { name: 'Single Family', icon: '🏡' },
     { name: 'Multi Family', icon: '🏘️' },
     { name: 'Studio', icon: '📦' },
     { name: 'Penthouse', icon: '🏰' },
+    { name: 'Single Room', icon: '🛏️' },
+    { name: 'Sharing Room', icon: '👥' },
+    { name: '1 BHK', icon: '🏠' },
+    { name: '2 BHK', icon: '🏠' },
+    { name: '3 BHK', icon: '🏠' },
+    { name: 'Commercial Building', icon: '🏪' },
     { name: 'Office Space', icon: '💼' },
     { name: 'Store Front', icon: '🏬' },
-    { name: 'Warehouse', icon: '🏭' },
-    { name: 'Workshop', icon: '🔧' },
     { name: 'Food Services', icon: '🍽️' },
     { name: 'Guest Services', icon: '🛏️' },
     { name: 'Medical Services', icon: '🏥' },
     { name: 'Mixed Commercial', icon: '🏢' },
-    { name: 'Agricultural', icon: '🌾' },
-    { name: 'Residential', icon: '🏠' },
-    { name: 'Commercial', icon: '🏪' },
-    { name: 'Industrial', icon: '🏗️' },
-    { name: 'Mixed Use', icon: '🌆' },
-    { name: 'House', icon: '🏠' },
+    { name: 'Industrial Site', icon: '🏗️' },
+    { name: 'Warehouse', icon: '🏭' },
+    { name: 'Workshop', icon: '🔧' },
     { name: 'Land', icon: '🌍' },
+    { name: 'Agricultural', icon: '🌾' },
+    { name: 'Mixed Use', icon: '🌆' },
   ];
 
   useEffect(() => {
@@ -335,7 +378,7 @@ const PropertyMap = () => {
     const fetchBackendProperties = async () => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || 'https://nepalbhumi.onrender.com/api';
-        const response = await fetch(`${apiUrl}/properties?status=active&limit=100`, {
+        const response = await fetch(`${apiUrl}/properties?status=active&limit=500`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -358,20 +401,10 @@ const PropertyMap = () => {
           });
           console.log('[PropertyMap] ==========================================\n');
 
-          // Main property types for PropertyMap display
-          const mainPropertyTypes = [
-            'apartment', 'single-family', 'multi-family', 'studio', 'penthouse',
-            'office-space', 'store-front', 'warehouse', 'workshop',
-            'food-services', 'guest-services', 'medical-services', 'mixed-commercial',
-            'agricultural', 'residential', 'commercial', 'industrial', 'mixed-use', 'house', 'land'
-          ];
+          // Use all backend properties instead of filtering by type
+          const filteredBackendProps = backendProperties;
 
-          // Filter backend properties to only show main property types
-          const filteredBackendProps = backendProperties.filter(prop =>
-            mainPropertyTypes.includes(prop.type?.toLowerCase())
-          );
-
-          console.log('[PropertyMap] Filtered backend properties:', filteredBackendProps.length);
+          console.log('[PropertyMap] Total properties to display:', filteredBackendProps.length);
 
           // Convert backend properties to display format with normalized coordinates
           const convertedProps = filteredBackendProps.map(prop => {
@@ -477,9 +510,14 @@ const PropertyMap = () => {
               bedrooms: prop.features?.bedrooms || 0,
               bathrooms: prop.features?.bathrooms || 0,
               area: prop.features?.area || 0,
-              type: getDisplayType(prop.type), // Convert to display type
+              type: getDisplayType(prop.type),
               purpose: prop.purpose,
+              status: prop.status,
               location: locationDisplay,
+              address: prop.location?.address,
+              city: prop.location?.city,
+              landmark: prop.location?.landmark,
+              streetTole: prop.location?.streetTole,
               amenities: prop.amenities || [],
               rating: 4.5,
               lat: lat,
@@ -588,20 +626,6 @@ const PropertyMap = () => {
           <div className="space-y-4">
             <div className="flex  justify-center align-center gap-2 items-center">
 
-              <div className="flex gap-2">
-                {['All', 'Sale', 'Rent'].map(purpose => (
-                  <button
-                    key={purpose}
-                    onClick={() => setFilters({ ...filters, purpose })}
-                    className={`px-5 py-2.5 rounded-lg font-semibold transition whitespace-nowrap ${filters.purpose === purpose
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40'
-                      : 'bg-slate-700/40 text-slate-300 hover:bg-slate-700/60 border border-slate-600'
-                      }`}
-                  >
-                    {purpose}
-                  </button>
-                ))}
-              </div>
               <div className="flex-1 max-w-md relative group">
                 <Search className="absolute left-4 top-3.5 text-slate-400 group-focus-within:text-blue-400 transition" size={22} />
                 <input
@@ -675,23 +699,56 @@ const PropertyMap = () => {
         </div>
       </div>
 
-      {/* Property Type Carousel */}
+      {/* Property Type Carousel & Purpose Filter */}
       <div className="z-30 bg-slate-800/80 backdrop-blur-lg border-b border-slate-700/50">
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 overflow-x-auto py-4 no-scrollbar">
-            {propertyTypes.map(type => (
-              <button
-                key={type.name}
-                onClick={() => setSelectedType(type.name)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold whitespace-nowrap transition transform hover:scale-105 ${selectedType === type.name
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/40'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700/70 border border-slate-600'
-                  }`}
-              >
-                <span className="text-lg">{type.icon}</span>
-                <span className="hidden sm:inline">{type.name}</span>
-              </button>
-            ))}
+          <div className="flex items-center gap-4">
+            {/* Carousel - Scrollable Area */}
+            <div className="flex-1 overflow-x-auto py-4 no-scrollbar">
+              <div className="flex gap-2">
+                {propertyTypes.map(type => (
+                  <button
+                    key={type.name}
+                    onClick={() => {
+                      setSelectedType(type.name);
+                      if (type.name === 'All') {
+                        setFilters(prev => ({ ...prev, purpose: 'All' }));
+                      }
+                    }}
+                    className={`group flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold whitespace-nowrap transition-all transform hover:scale-110 ${selectedType === type.name
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/40'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700/70 border border-slate-600'
+                      }`}
+                  >
+                    <span className="text-lg group-hover:scale-125 transition-transform">{type.icon}</span>
+                    <span className={`transition-all duration-300 ${selectedType === type.name ? 'inline' : 'hidden group-hover:inline'}`}>
+                      {type.name}
+                    </span>
+                    <span className={`hidden sm:inline ${selectedType === type.name ? 'hidden' : ''}`}>
+                      {type.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Purpose Toggle - Overlay/Fixed on right */}
+            <div className="flex gap-1 p-1 bg-slate-900/40 rounded-xl border border-slate-700/50 shadow-2xl backdrop-blur-md">
+              {['Sale', 'Rent'].map(purpose => (
+                <button
+                  key={purpose}
+                  onClick={() => setFilters({ ...filters, purpose })}
+                  className={`px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all duration-300 ${filters.purpose === purpose
+                    ? purpose === 'Sale'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-500/40'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-500 text-white shadow-lg shadow-blue-500/40'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                    }`}
+                >
+                  {purpose}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -735,13 +792,25 @@ const PropertyMap = () => {
                       <div className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:bg-red-50 transition cursor-pointer">
                         <Heart size={16} className="text-slate-600 hover:text-red-500" />
                       </div>
-                      <div className="absolute bottom-3 left-3 flex gap-2">
-                        {property.purpose?.toLowerCase() === 'sale' && (
-                          <span className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-lg shadow-md">For Sale</span>
+                      <div className="absolute top-3 left-3 flex flex-col gap-2">
+                        {property.status && (
+                          <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg ${property.status === 'active'
+                            ? 'bg-blue-600/90 text-white'
+                            : property.status === 'sold'
+                              ? 'bg-red-600/90 text-white'
+                              : 'bg-amber-600/90 text-white'
+                            }`}>
+                            {property.status}
+                          </span>
                         )}
-                        {property.purpose?.toLowerCase() === 'rent' && (
-                          <span className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-lg shadow-md">For Rent</span>
-                        )}
+                        <div className="flex gap-2">
+                          {property.purpose?.toLowerCase() === 'sale' && (
+                            <span className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md">For Sale</span>
+                          )}
+                          {property.purpose?.toLowerCase() === 'rent' && (
+                            <span className="px-2.5 py-1 bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md">For Rent</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="p-4">
@@ -788,8 +857,12 @@ const PropertyMap = () => {
                             <Map size={12} />
                             Map
                           </button>
-                          <Link to={`/property/${property.id}`} className="text-xs px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition font-semibold">
-                            View
+                          <Link 
+                            to={`/property/${property.id}`} 
+                            className="text-[10px] font-black uppercase tracking-widest px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md hover:shadow-blue-500/40 flex items-center gap-1.5"
+                          >
+                            <span>Details</span>
+                            <ExternalLink size={12} />
                           </Link>
                         </div>
                       </div>
@@ -808,20 +881,27 @@ const PropertyMap = () => {
 
           {/* Map on Right Side - Sticky Positioned */}
           <div className="lg:col-span-2 pr-4 sm:pr-6 lg:pr-8">
-            {selectedProperty && (
-              <div
-                ref={mapRef}
-                className="sticky top-24 h-[600px] rounded-2xl overflow-hidden shadow-2xl border-2 border-blue-500 bg-white"
-              >
+            <div
+              ref={mapRef}
+              className="sticky top-24 h-[600px] rounded-2xl overflow-hidden shadow-2xl border border-slate-700 bg-slate-900"
+            >
+              {selectedProperty ? (
                 <MapComponent
                   key={`${selectedProperty.id}-${selectedProperty.lat}-${selectedProperty.lng}`}
                   lat={selectedProperty.lat}
                   lng={selectedProperty.lng}
                   title={selectedProperty.title}
-                  price={`${selectedProperty.price.toLocaleString()} ${selectedProperty.currency}`}
+                  price={selectedProperty.price}
+                  property={selectedProperty}
                 />
-              </div>
-            )}
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-12 text-center text-slate-500 bg-slate-900/50">
+                  <Map size={64} className="mb-6 opacity-20" />
+                  <h3 className="text-xl font-black text-slate-400 uppercase tracking-widest mb-2">Initialize Intelligence</h3>
+                  <p className="text-sm font-bold text-slate-500">Select a property asset to engage Geographic Intelligence telemetry and verify real-world spatial positioning.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -71,14 +71,18 @@ const PropertyCard = ({ property, onSave, onSaveSuccess }) => {
           {/* Overlay Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Purpose Badge - Top Left */}
-          {property?.purpose && (
-            <div className="absolute top-4 left-4 z-10">
+          {/* Status/Purpose Badge - Top Left */}
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+            {property?.status === 'sold' || property?.status === 'rented' ? (
+              <div className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-rose-700 text-white text-xs font-bold shadow-lg backdrop-blur-sm uppercase tracking-wider">
+                {property.status === 'sold' ? '🛑 Sold Out' : '🛑 Rented Out'}
+              </div>
+            ) : property?.purpose ? (
               <div className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs font-bold shadow-lg backdrop-blur-sm">
                 {property.purpose === 'rent' ? '🔑 For Rent' : '🏷️ For Sale'}
               </div>
-            </div>
-          )}
+            ) : null}
+          </div>
 
           {/* Featured Badge */}
           <div className="absolute top-4 right-4 z-10">

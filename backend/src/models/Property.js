@@ -128,7 +128,7 @@ const propertySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'active', 'archived', 'rejected'],
+      enum: ['pending', 'active', 'archived', 'rejected', 'sold', 'rented'],
       default: 'pending',
     },
     verificationStatus: {
@@ -151,6 +151,10 @@ const propertySchema = new mongoose.Schema(
       default: false,
     },
     featuredUntil: Date,
+    videoUrl: {
+      type: String,
+      trim: true,
+    },
     ratings: {
       average: {
         type: Number,

@@ -62,6 +62,7 @@ export const createPropertyAdmin = async (req, res) => {
       agent,
       status,
       featured,
+      videoUrl,
     } = req.body;
 
     // Validate required fields
@@ -146,6 +147,7 @@ export const createPropertyAdmin = async (req, res) => {
       purpose,
       price: parseInt(price),
       currency: currency || 'NPR',
+      videoUrl: videoUrl || '',
       location: {
         province: parsedLocation.province || '',
         district: parsedLocation.district || '',
@@ -177,6 +179,7 @@ export const createPropertyAdmin = async (req, res) => {
         totalFloors: parsedFeatures.totalFloors || '',
       },
       amenities: parsedAmenities,
+      videoUrl: videoUrl || '',
       images: images,
       ownerId: req.user.userId || req.user._id,
       postedBy: {
@@ -212,7 +215,7 @@ export const createPropertyAdmin = async (req, res) => {
 export const updatePropertyAdmin = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, type, purpose, price, currency, location, features, amenities, agent, status, featured } = req.body;
+    const { title, description, type, purpose, price, currency, location, features, amenities, agent, status, featured, videoUrl } = req.body;
 
     console.log('[ADMIN UPDATE]', 'Property ID:', id);
     console.log('[ADMIN UPDATE]', 'Received data:', {
@@ -220,6 +223,7 @@ export const updatePropertyAdmin = async (req, res) => {
       type,
       purpose,
       price,
+      videoUrl,
       status,
       featured,
       hasLocation: !!location,
@@ -254,6 +258,7 @@ export const updatePropertyAdmin = async (req, res) => {
     if (currency) property.currency = currency;
     if (status) property.status = status;
     if (featured !== undefined) property.featured = featured;
+    if (videoUrl !== undefined) property.videoUrl = videoUrl;
 
     // Update location if provided
     if (location) {
@@ -527,7 +532,7 @@ export const updatePropertyStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!['pending', 'active', 'archived', 'rejected'].includes(status)) {
+    if (!['pending', 'active', 'archived', 'rejected', 'sold', 'rented'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid status',

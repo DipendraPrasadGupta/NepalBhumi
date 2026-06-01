@@ -380,12 +380,12 @@ function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#020617] relative">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-[#020617] relative">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/5 blur-[120px] pointer-events-none rounded-full"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-600/5 blur-[120px] pointer-events-none rounded-full"></div>
 
         {/* Top Header */}
-        <header className="h-20 bg-slate-900/40 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-8 z-40 sticky top-0">
+        <header className="shrink-0 h-20 bg-slate-900/40 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-8 z-40">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-slate-400 hover:text-white">
               <Menu size={24} />

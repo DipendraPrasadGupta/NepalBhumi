@@ -467,7 +467,10 @@ const AgentPropertyDashboard = () => {
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+            <option value="archived">Archived</option>
+            <option value="sold">Sold</option>
+            <option value="rented">Rented</option>
           </select>
         </div>
 
@@ -535,11 +538,18 @@ const AgentPropertyDashboard = () => {
                           onChange={(e) => handleToggleVisibility(property._id, e.target.value)}
                           className={`px-3 py-1 rounded-full text-sm font-semibold border-0 cursor-pointer ${property.status === 'active'
                             ? 'bg-green-500/20 text-green-400'
-                            : 'bg-red-500/20 text-red-400'
+                            : property.status === 'pending'
+                            ? 'bg-amber-500/20 text-amber-400'
+                            : property.status === 'sold' || property.status === 'rented'
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : 'bg-slate-500/20 text-slate-400'
                             }`}
                         >
                           <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
+                          <option value="pending">Pending</option>
+                          <option value="archived">Archived</option>
+                          <option value="sold">Sold</option>
+                          <option value="rented">Rented</option>
                         </select>
                       </td>
                       <td className="px-6 py-4">

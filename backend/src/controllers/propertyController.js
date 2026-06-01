@@ -5,7 +5,7 @@ import { sendPropertyApprovedEmail } from '../services/mailService.js';
 
 export const createProperty = async (req, res) => {
   try {
-    const { title, description, type, purpose, price, currency, location, features, amenities } =
+    const { title, description, type, purpose, price, currency, location, features, amenities, videoUrl } =
       req.body;
     
     console.log('DEBUG: amenities received:', amenities);
@@ -63,6 +63,7 @@ export const createProperty = async (req, res) => {
         highlights: parsedFeatures.highlights || []
       },
       amenities: parsedAmenities,
+      videoUrl: videoUrl || '',
       images,
       ownerId: req.user.userId,
     });
@@ -82,7 +83,7 @@ export const getProperties = async (req, res) => {
     const { page, limit, type, purpose, city, minPrice, maxPrice, search } = req.query;
     const { skip, limit: pageLimit } = paginationParams(page, limit);
 
-    const filter = { status: 'active' };
+    const filter = { status: { $in: ['active', 'sold', 'rented'] } };
 
     if (type) filter.type = type;
     if (purpose) filter.purpose = purpose;
@@ -128,7 +129,7 @@ export const getPropertyById = async (req, res) => {
       req.params.id,
       { $inc: { views: 1 } },
       { new: true }
-    ).populate('ownerId', 'name email phone avatarUrl bio ratings role');
+    ).populate('ownerId', 'name email phone avatarUrl bio ratings role socialLinks');
 
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
@@ -172,6 +173,7 @@ export const updateProperty = async (req, res) => {
       location,
       features,
       amenities,
+      videoUrl,
     } = req.body;
 
     // Update basic fields
@@ -183,6 +185,7 @@ export const updateProperty = async (req, res) => {
     if (currency) property.currency = currency;
     if (status !== undefined) property.status = status;
     if (featured !== undefined) property.featured = featured === 'true' || featured === true;
+    if (videoUrl !== undefined) property.videoUrl = videoUrl;
 
     // Parse and update location
     if (location) {
