@@ -76,9 +76,9 @@ function Agents() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white pb-20">
+    <div className="min-h-screen bg-slate-900 text-white pb-20 pt-24">
       {/* Hero Section */}
-      <div className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="relative pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Background Decorative Elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>

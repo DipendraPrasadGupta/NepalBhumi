@@ -34,7 +34,7 @@ function AppContent() {
   const location = useLocation();
   const hideFooterRoutes = ['/map', '/agent/profile', '/agent/properties', '/agent/dashboard'];
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isAgentRoute = location.pathname.startsWith('/agent');
+  const isAgentRoute = location.pathname.startsWith('/agent/') || location.pathname === '/agent';
   const shouldHideFooter = hideFooterRoutes.includes(location.pathname) || isAdminRoute || isAgentRoute;
   const shouldHideNavbar = isAdminRoute || isAgentRoute;
 
